@@ -1,0 +1,7 @@
+# Colab GPU: Python 모델 코드는 노트북 셀에 있고 아래 공개 라이브러리를 직접 씁니다.
+numpy==2.5.2                 # 배열 생성, 데이터 저장·읽기
+Pillow==12.3.0               # from PIL import Image: 이미지 처리
+safetensors==0.8.0           # 사전학습 가중치 읽기
+jax[cuda12]==0.11.1         # CUDA 12 GPU 지원을 포함한 JAX
+optax==0.2.8                # 손실 함수와 Adam 옵티마이저
+matplotlib==3.11.1          # 학습 곡선과 평가 결과 시각화

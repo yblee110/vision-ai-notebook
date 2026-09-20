@@ -1,0 +1,132 @@
+[
+  {
+    "image_id": "cifar100/train/47223",
+    "workbench_label": "bottle",
+    "top5_imagenet": [
+      {
+        "label": "lotion",
+        "probability": 0.1324525624513626
+      },
+      {
+        "label": "nipple",
+        "probability": 0.11122506111860275
+      },
+      {
+        "label": "sunscreen, sunblock, sun blocker",
+        "probability": 0.09106262028217316
+      },
+      {
+        "label": "whiskey jug",
+        "probability": 0.06150283291935921
+      },
+      {
+        "label": "pill bottle",
+        "probability": 0.03322790563106537
+      }
+    ]
+  },
+  {
+    "image_id": "cifar100/train/05696",
+    "workbench_label": "bowl",
+    "top5_imagenet": [
+      {
+        "label": "mortar",
+        "probability": 0.297105610370636
+      },
+      {
+        "label": "frying pan, frypan, skillet",
+        "probability": 0.06190402805805206
+      },
+      {
+        "label": "caldron, cauldron",
+        "probability": 0.04742278903722763
+      },
+      {
+        "label": "whiskey jug",
+        "probability": 0.015252228826284409
+      },
+      {
+        "label": "mixing bowl",
+        "probability": 0.013000722974538803
+      }
+    ]
+  },
+  {
+    "image_id": "cifar100/train/40254",
+    "workbench_label": "can",
+    "top5_imagenet": [
+      {
+        "label": "whiskey jug",
+        "probability": 0.03280752897262573
+      },
+      {
+        "label": "nipple",
+        "probability": 0.028746984899044037
+      },
+      {
+        "label": "eggnog",
+        "probability": 0.01905469410121441
+      },
+      {
+        "label": "gong, tam-tam",
+        "probability": 0.01597578264772892
+      },
+      {
+        "label": "milk can",
+        "probability": 0.015681447461247444
+      }
+    ]
+  },
+  {
+    "image_id": "cifar100/train/34388",
+    "workbench_label": "cup",
+    "top5_imagenet": [
+      {
+        "label": "hourglass",
+        "probability": 0.0976027101278305
+      },
+      {
+        "label": "eggnog",
+        "probability": 0.027354076504707336
+      },
+      {
+        "label": "soap dispenser",
+        "probability": 0.021047228947281837
+      },
+      {
+        "label": "beaker",
+        "probability": 0.017423167824745178
+      },
+      {
+        "label": "nipple",
+        "probability": 0.01486830785870552
+      }
+    ]
+  },
+  {
+    "image_id": "cifar100/train/15565",
+    "workbench_label": "plate",
+    "top5_imagenet": [
+      {
+        "label": "barometer",
+        "probability": 0.07974961400032043
+      },
+      {
+        "label": "wall clock",
+        "probability": 0.053964920341968536
+      },
+      {
+        "label": "analog clock",
+        "probability": 0.05000975728034973
+      },
+      {
+        "label": "stopwatch, stop watch",
+        "probability": 0.02507123351097107
+      },
+      {
+        "label": "magnetic compass",
+        "probability": 0.01820753701031208
+      }
+    ]
+  }
+]

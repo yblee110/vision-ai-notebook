@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-19",
+  "automated_tests": {
+    "passed": 15,
+    "command": "pytest -q"
+  },
+  "all_notebooks_without_project_package": true,
+  "delivery_isolation_check": {
+    "passed": true,
+    "notebook": "01_pretrained_inference.ipynb",
+    "separate_public_library_venv": true,
+    "extracted_archive_root": true,
+    "input": "copied verified prepared data; network download not part of this isolated check"
+  },
+  "first_github_codespaces_container_build_verified": false,
+  "actual_accelerator_notebooks": {
+    "gpu": "passed",
+    "tpu": "passed",
+    "matching_comparison_conditions": true,
+    "sessions_stopped": true,
+    "server_active_sessions_after": "none"
+  }
+}

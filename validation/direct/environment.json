@@ -1,0 +1,18 @@
+{
+  "python": "/tmp/vision-direct-libraries-check/bin/python",
+  "project_distribution_installed": false,
+  "jax_device_platform": "cpu",
+  "numpy": "2.5.2",
+  "libraries_imported": [
+    "numpy",
+    "PIL.Image",
+    "safetensors.numpy.load_file",
+    "jax",
+    "jax.numpy",
+    "optax",
+    "matplotlib.pyplot",
+    "pyarrow.parquet"
+  ],
+  "verification_date": "2026-09-19",
+  "codespaces_first_container_build_verified": false
+}

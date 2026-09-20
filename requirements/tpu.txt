@@ -1,0 +1,7 @@
+# Colab TPU: GPU 파일을 함께 설치하지 않고 이 파일만 사용합니다.
+numpy==2.5.2                 # 배열 생성, 데이터 저장·읽기
+Pillow==12.3.0               # from PIL import Image: 이미지 처리
+safetensors==0.8.0           # 사전학습 가중치 읽기
+jax[tpu]==0.11.1            # TPU 지원을 포함한 JAX
+optax==0.2.8                # 손실 함수와 Adam 옵티마이저
+matplotlib==3.11.1          # 학습 곡선과 평가 결과 시각화

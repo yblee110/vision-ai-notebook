@@ -1,0 +1,187 @@
+{
+  "notebooks": [
+    {
+      "file": "00_setup_and_data.ipynb",
+      "imports": [
+        "IPython",
+        "PIL",
+        "hashlib",
+        "importlib.metadata",
+        "io",
+        "json",
+        "matplotlib.pyplot",
+        "numpy",
+        "os",
+        "pathlib",
+        "pyarrow.parquet",
+        "shutil",
+        "sys",
+        "urllib.request"
+      ],
+      "hidden_wrapper_calls": []
+    },
+    {
+      "file": "01_pretrained_inference.ipynb",
+      "imports": [
+        "IPython",
+        "PIL",
+        "hashlib",
+        "importlib.metadata",
+        "jax",
+        "jax.numpy",
+        "json",
+        "matplotlib.pyplot",
+        "numpy",
+        "os",
+        "pathlib",
+        "safetensors.numpy",
+        "sys"
+      ],
+      "hidden_wrapper_calls": []
+    },
+    {
+      "file": "02_gpu_finetuning.ipynb",
+      "imports": [
+        "IPython",
+        "PIL",
+        "csv",
+        "hashlib",
+        "importlib.metadata",
+        "jax",
+        "jax.numpy",
+        "json",
+        "matplotlib.pyplot",
+        "numpy",
+        "optax",
+        "os",
+        "pathlib",
+        "safetensors.numpy",
+        "sys",
+        "time"
+      ],
+      "hidden_wrapper_calls": []
+    },
+    {
+      "file": "02_gpu_finetuning_output.ipynb",
+      "imports": [
+        "IPython",
+        "PIL",
+        "csv",
+        "hashlib",
+        "importlib.metadata",
+        "jax",
+        "jax.numpy",
+        "json",
+        "matplotlib.pyplot",
+        "numpy",
+        "optax",
+        "os",
+        "pathlib",
+        "safetensors.numpy",
+        "sys",
+        "time"
+      ],
+      "hidden_wrapper_calls": []
+    },
+    {
+      "file": "03_tpu_and_compare.ipynb",
+      "imports": [
+        "IPython",
+        "PIL",
+        "csv",
+        "hashlib",
+        "importlib.metadata",
+        "jax",
+        "jax.numpy",
+        "json",
+        "matplotlib.pyplot",
+        "numpy",
+        "optax",
+        "os",
+        "pathlib",
+        "safetensors.numpy",
+        "sys",
+        "time"
+      ],
+      "hidden_wrapper_calls": []
+    },
+    {
+      "file": "04_custom_images.ipynb",
+      "imports": [
+        "IPython",
+        "PIL",
+        "hashlib",
+        "importlib.metadata",
+        "jax",
+        "jax.numpy",
+        "json",
+        "matplotlib.pyplot",
+        "numpy",
+        "os",
+        "pathlib",
+        "safetensors.numpy",
+        "sys"
+      ],
+      "hidden_wrapper_calls": []
+    }
+  ],
+  "custom_branch": {
+    "status": "passed",
+    "prepared_classes": [
+      "bottle",
+      "cup"
+    ],
+    "split_counts": {
+      "train": 2,
+      "validation": 2,
+      "test": 2
+    },
+    "checkpoint": "validation/direct/cpu-full/finetuned_checkpoint.npz",
+    "checkpoint_unchanged": true,
+    "inference_image_id": "cifar100/test/02314",
+    "prediction": "bottle",
+    "softmax": 0.9974493384361267,
+    "matches_direct_02_saved_prediction": true,
+    "existing_data_refused": true,
+    "existing_manifest_unchanged": true,
+    "note": "04 exact code cells executed with temporary photo input, preparation enabled, and current direct 02 full-CPU checkpoint. Input was six real CIFAR images, not newly captured workbench photos."
+  },
+  "visuals_extracted": [
+    "04-actual-input-checkpoint-inference.png",
+    "executed-00_setup_and_data-24-0.png",
+    "executed-01_pretrained_inference-33-0.png",
+    "executed-01_pretrained_inference-9-1.png",
+    "executed-02_gpu_finetuning-49-0.png",
+    "executed-02_gpu_finetuning-49-1.png",
+    "executed-03_tpu_and_compare-49-0.png",
+    "executed-03_tpu_and_compare-49-1.png"
+  ],
+  "custom_two_class_end_to_end": {
+    "status": "passed",
+    "scope": "Exact 04 preparation cells → exact 02 3+3 epoch CPU training cells with only DATA_PATH/OUTPUT_DIR/device settings changed → exact 04 restoration/inference cells. Six real CIFAR images in temporary two-class three-split folders; no cloud resources.",
+    "classes": [
+      "bottle",
+      "cup"
+    ],
+    "training_parameter_count": 445634,
+    "frozen_prefix_unchanged": true,
+    "last_block_changed": true,
+    "restored_prediction": "cup",
+    "prediction_matches_training_report": true,
+    "device": "cpu",
+    "result_status": "cpu_validation"
+  },
+  "visual_review": {
+    "status": "passed",
+    "checked": [
+      "00 original image gallery",
+      "01 ImageNet top-5 barplot",
+      "02 head/fine confusion matrices",
+      "02 train/validation learning curves",
+      "03 explicit CPU smoke confusion matrices",
+      "04 original direct-02 checkpoint prediction image",
+      "04 two-class trained checkpoint prediction image"
+    ],
+    "findings": "Axes, labels, numeric annotations, figure titles readable; no clipping observed. CPU smoke plots are test evidence, not TPU hardware verification."
+  }
+}

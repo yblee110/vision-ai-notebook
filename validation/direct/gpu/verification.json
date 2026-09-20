@@ -1,0 +1,291 @@
+{
+  "passed": true,
+  "device": {
+    "requested": "gpu",
+    "platform": "gpu",
+    "device_kind": "Tesla T4",
+    "available_count": 1,
+    "used_count": 1,
+    "jax_version": "0.11.1"
+  },
+  "notebook_errors": 0,
+  "notebook_sha256": "cba93591e71b4909c4e4188b88829c2fbd12da8e8df7a025956f421dd5cfc2b3",
+  "artifact_hashes_match": true,
+  "steps": [
+    {
+      "command": [
+        "new",
+        "-s",
+        "vision-direct-gpu-0919",
+        "--gpu",
+        "T4"
+      ],
+      "exit_code": 0,
+      "seconds": 15.58
+    },
+    {
+      "command": [
+        "status",
+        "-s",
+        "vision-direct-gpu-0919"
+      ],
+      "exit_code": 0,
+      "seconds": 1.91
+    },
+    {
+      "command": [
+        "install",
+        "-s",
+        "vision-direct-gpu-0919",
+        "-r",
+        "requirements/gpu.txt"
+      ],
+      "exit_code": 0,
+      "seconds": 14.13
+    },
+    {
+      "command": [
+        "restart-kernel",
+        "-s",
+        "vision-direct-gpu-0919"
+      ],
+      "exit_code": 0,
+      "seconds": 10.97
+    },
+    {
+      "command": [
+        "exec",
+        "-s",
+        "vision-direct-gpu-0919",
+        "--timeout",
+        "120"
+      ],
+      "exit_code": 0,
+      "seconds": 1.46
+    },
+    {
+      "command": [
+        "upload",
+        "-s",
+        "vision-direct-gpu-0919",
+        ".vision-lab-root",
+        "content/vision-ai/.vision-lab-root"
+      ],
+      "exit_code": 0,
+      "seconds": 0.67
+    },
+    {
+      "command": [
+        "upload",
+        "-s",
+        "vision-direct-gpu-0919",
+        "assets/pretrained/model.safetensors",
+        "content/vision-ai/assets/pretrained/model.safetensors"
+      ],
+      "exit_code": 0,
+      "seconds": 5.78
+    },
+    {
+      "command": [
+        "upload",
+        "-s",
+        "vision-direct-gpu-0919",
+        "assets/pretrained/config.json",
+        "content/vision-ai/assets/pretrained/config.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.83
+    },
+    {
+      "command": [
+        "upload",
+        "-s",
+        "vision-direct-gpu-0919",
+        "assets/pretrained/preprocessor_config.json",
+        "content/vision-ai/assets/pretrained/preprocessor_config.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.69
+    },
+    {
+      "command": [
+        "upload",
+        "-s",
+        "vision-direct-gpu-0919",
+        "assets/pretrained/source.json",
+        "content/vision-ai/assets/pretrained/source.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.71
+    },
+    {
+      "command": [
+        "upload",
+        "-s",
+        "vision-direct-gpu-0919",
+        "data/prepared/manifest.json",
+        "content/vision-ai/data/prepared/manifest.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.74
+    },
+    {
+      "command": [
+        "upload",
+        "-s",
+        "vision-direct-gpu-0919",
+        "data/prepared/train.npz",
+        "content/vision-ai/data/prepared/train.npz"
+      ],
+      "exit_code": 0,
+      "seconds": 1.63
+    },
+    {
+      "command": [
+        "upload",
+        "-s",
+        "vision-direct-gpu-0919",
+        "data/prepared/validation.npz",
+        "content/vision-ai/data/prepared/validation.npz"
+      ],
+      "exit_code": 0,
+      "seconds": 5.91
+    },
+    {
+      "command": [
+        "upload",
+        "-s",
+        "vision-direct-gpu-0919",
+        "data/prepared/test.npz",
+        "content/vision-ai/data/prepared/test.npz"
+      ],
+      "exit_code": 0,
+      "seconds": 1.23
+    },
+    {
+      "command": [
+        "exec",
+        "-s",
+        "vision-direct-gpu-0919",
+        "-f",
+        "notebooks/02_gpu_finetuning.ipynb",
+        "--timeout",
+        "1800"
+      ],
+      "exit_code": 0,
+      "seconds": 29.7
+    },
+    {
+      "command": [
+        "download",
+        "-s",
+        "vision-direct-gpu-0919",
+        "content/vision-ai/results/gpu/report.json",
+        "/home/leeyb/260922_\uac15\uc758/vision_ai_notbook/validation/direct/gpu/report.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.8
+    },
+    {
+      "command": [
+        "download",
+        "-s",
+        "vision-direct-gpu-0919",
+        "content/vision-ai/results/gpu/head_checkpoint.npz",
+        "/home/leeyb/260922_\uac15\uc758/vision_ai_notbook/validation/direct/gpu/head_checkpoint.npz"
+      ],
+      "exit_code": 0,
+      "seconds": 1.43
+    },
+    {
+      "command": [
+        "download",
+        "-s",
+        "vision-direct-gpu-0919",
+        "content/vision-ai/results/gpu/finetuned_checkpoint.npz",
+        "/home/leeyb/260922_\uac15\uc758/vision_ai_notbook/validation/direct/gpu/finetuned_checkpoint.npz"
+      ],
+      "exit_code": 0,
+      "seconds": 2.11
+    },
+    {
+      "command": [
+        "download",
+        "-s",
+        "vision-direct-gpu-0919",
+        "content/vision-ai/results/gpu/training.csv",
+        "/home/leeyb/260922_\uac15\uc758/vision_ai_notbook/validation/direct/gpu/training.csv"
+      ],
+      "exit_code": 0,
+      "seconds": 0.78
+    },
+    {
+      "command": [
+        "download",
+        "-s",
+        "vision-direct-gpu-0919",
+        "content/vision-ai/results/gpu/predictions.csv",
+        "/home/leeyb/260922_\uac15\uc758/vision_ai_notbook/validation/direct/gpu/predictions.csv"
+      ],
+      "exit_code": 0,
+      "seconds": 0.72
+    },
+    {
+      "command": [
+        "download",
+        "-s",
+        "vision-direct-gpu-0919",
+        "content/vision-ai/results/gpu/original_predictions.json",
+        "/home/leeyb/260922_\uac15\uc758/vision_ai_notbook/validation/direct/gpu/original_predictions.json"
+      ],
+      "exit_code": 0,
+      "seconds": 0.71
+    },
+    {
+      "command": [
+        "download",
+        "-s",
+        "vision-direct-gpu-0919",
+        "content/vision-ai/results/gpu/confusion_head.csv",
+        "/home/leeyb/260922_\uac15\uc758/vision_ai_notbook/validation/direct/gpu/confusion_head.csv"
+      ],
+      "exit_code": 0,
+      "seconds": 0.79
+    },
+    {
+      "command": [
+        "download",
+        "-s",
+        "vision-direct-gpu-0919",
+        "content/vision-ai/results/gpu/confusion_finetune.csv",
+        "/home/leeyb/260922_\uac15\uc758/vision_ai_notbook/validation/direct/gpu/confusion_finetune.csv"
+      ],
+      "exit_code": 0,
+      "seconds": 0.72
+    },
+    {
+      "command": [
+        "download",
+        "-s",
+        "vision-direct-gpu-0919",
+        "content/vision-ai/results/gpu/confusion_comparison.png",
+        "/home/leeyb/260922_\uac15\uc758/vision_ai_notbook/validation/direct/gpu/confusion_comparison.png"
+      ],
+      "exit_code": 0,
+      "seconds": 0.9
+    },
+    {
+      "command": [
+        "download",
+        "-s",
+        "vision-direct-gpu-0919",
+        "content/vision-ai/results/gpu/learning_curves.png",
+        "/home/leeyb/260922_\uac15\uc758/vision_ai_notbook/validation/direct/gpu/learning_curves.png"
+      ],
+      "exit_code": 0,
+      "seconds": 1.25
+    }
+  ],
+  "source_code_sha256": "93eb1f72ee7cc99940fcb5e327c8345f367075687d1b808a5dbd4ae08162cd3f",
+  "executed_code_matches_distributed_notebook": true
+}
