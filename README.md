@@ -6,7 +6,12 @@
 
 ## 처음 시작하는 학생
 
-이 폴더의 내용물을 새 GitHub 저장소 최상위에 올리고 Codespace를 만듭니다. `.devcontainer`, `.vision-lab-root` 같은 숨김 파일도 포함합니다. 기본 환경은 HF CLI·Colab CLI와 데이터 준비 라이브러리만 설치합니다. Google 로그인과 GPU 할당은 학생이 실습 중 진행합니다.
+1. 이 저장소의 **[Fork](https://github.com/yblee110/vision-ai-notebook/fork)**를 눌러 본인 GitHub 계정으로 복사합니다.
+2. **본인이 Fork한 저장소**에서 **Code → Codespaces → Create codespace on main**을 선택합니다. 머신을 고르는 경우 **2코어·8GB**를 사용합니다.
+3. 자동 환경 설치가 끝날 때까지 기다린 뒤 아래 명령으로 준비 상태를 확인합니다.
+4. 기본 노트북 00번을 열고 **커널 선택 → Jupyter 커널 → Vision AI (Codespaces CPU)**를 선택해 실행합니다.
+
+`.devcontainer`와 설치 설정은 Fork에 함께 포함됩니다. 기본 환경은 HF CLI·Colab CLI와 데이터 준비 라이브러리만 설치합니다. Google 로그인과 Colab GPU 할당은 학생이 본인 계정으로 실습 중 진행합니다. Codespaces와 Colab의 사용량은 별도로 관리합니다.
 
 ```bash
 source .venv/bin/activate
