@@ -183,6 +183,7 @@ Colab 종료 뒤 결과 폴더와 출력 노트북을 학생 PC로 내려받고 
 
 ## 수업 자료
 
+- [00·01·02 코드 해설 노트북](explanations/README.md): 각 원본 코드 셀의 변수·문법·결과를 설명하고 CPU에서 작은 예제를 실행합니다.
 - [Pipeline 추론·셸 시연·스킬 등록 예시](pipeline-guide.md)
 - [실제 T4 셸 시연 결과와 종료 기록](pipeline-demo-results.md)
 - [AI 코딩 네 가지 문제와 진행 방법](ai-coding-workshop.md)

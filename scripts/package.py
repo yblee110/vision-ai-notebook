@@ -1,4 +1,4 @@
-"""Bundle the three Hugging Face / Colab GPU notebooks and their support files.
+"""Bundle three practice notebooks, three reading companions and support files.
 
 This ZIP distributes files; it does not build or install a Python package.
 """
@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HF_NOTEBOOKS = (
     "00_hf_download_and_data.ipynb", "01_gpu_inference.ipynb", "02_gpu_finetuning.ipynb",
 )
+HF_EXPLANATIONS = tuple(name.replace('.ipynb', '_explained.ipynb') for name in HF_NOTEBOOKS)
 HF_FILES = (
     "hf_colab_gpu/README.md", "hf_colab_gpu/requirements-torch.txt",
     "hf_colab_gpu/requirements-gpu.txt", "hf_colab_gpu/handson.md",
@@ -23,7 +24,9 @@ HF_FILES = (
     "hf_colab_gpu/build_final_guide.py",
     "hf_colab_gpu/pipeline_inference.py", "hf_colab_gpu/run_pipeline_colab.sh",
     "hf_colab_gpu/pipeline-guide.md", "hf_colab_gpu/pipeline-demo-results.md",
+    "hf_colab_gpu/explanations/README.md",
     *(f"hf_colab_gpu/notebooks/{name}" for name in HF_NOTEBOOKS),
+    *(f"hf_colab_gpu/explanations/{name}" for name in HF_EXPLANATIONS),
 )
 FILES = (
     "README.md", "THIRD_PARTY.md", "pytest.ini", ".vision-lab-root", ".gitignore",
@@ -33,6 +36,7 @@ FILES = (
     "tests/test_distribution.py", "tests/test_environment.py",
     "tests/test_hf_notebooks.py", "tests/test_student_cells.py",
     "tests/test_pipeline_inference.py", "tests/test_pipeline_wrapper.py",
+    "tests/test_explanation_notebooks.py",
     ".agents/skills/vision-colab/SKILL.md",
     ".agents/skills/vision-colab/agents/openai.yaml",
     ".agents/skills/vision-pipeline-inference/SKILL.md",
@@ -116,8 +120,9 @@ def validate_archive(path):
                 raise RuntimeError(f"허용하지 않은 배포 파일: {name}")
         notebooks = {name for name in relative if name.endswith(".ipynb")}
         expected = {f"hf_colab_gpu/notebooks/{name}" for name in HF_NOTEBOOKS}
+        expected |= {f"hf_colab_gpu/explanations/{name}" for name in HF_EXPLANATIONS}
         if notebooks != expected:
-            raise RuntimeError("배포 ZIP에는 HF 기본 노트북 3개만 포함해야 합니다.")
+            raise RuntimeError("배포 ZIP에는 실습 노트북 3개와 코드 해설 노트북 3개만 포함해야 합니다.")
     return len(names)
 
 
@@ -136,7 +141,7 @@ def build_distribution(output, root=ROOT):
         partial.unlink(missing_ok=True)
     return {"file": str(output), "files": count, "bytes": output.stat().st_size,
             "sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
-            "format": "HF CLI + Colab GPU workshop; exactly three student notebooks; no project-package installation",
+            "format": "HF CLI + Colab GPU workshop; three practice and three explanation notebooks; no project-package installation",
             "excludes": ["credentials", "private images", "data downloads", "run state",
                          "virtual environments", "raw logs", "validation checkpoints",
                          "executed notebook copies", "legacy JAX/TPU course",

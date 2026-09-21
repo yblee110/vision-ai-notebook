@@ -34,6 +34,10 @@ python scripts/doctor.py
 
 01·02는 Codespaces에서 편집하고 공식 `colab exec -f ...ipynb`로 실행합니다. GPU 연결·설치·입력 전송을 먼저 해야 하므로 [단계별 실행 안내](hf_colab_gpu/README.md)를 따라가세요. Codespaces CPU의 Run All은 Colab GPU에 자동으로 연결되지 않습니다.
 
+## 코드 해설 함께 읽기
+
+코드가 처음이라면 [00·01·02 코드 해설 노트북](hf_colab_gpu/explanations/README.md)을 실습 파일 옆에 두고 읽어 보세요. 원본 코드의 변수와 처리 순서를 풀어 설명하고, GPU 없이 실행하는 작은 예제를 제공합니다. 실습용 세 파일과 해설용 세 파일은 폴더를 나누었습니다.
+
 ## 짧은 시연 · Pipeline 추론을 셸 파일로 실행하기
 
 00번을 마치면 같은 Hub 모델을 불러와 이미지 한 장을 추론하는 시연을 먼저 할 수 있습니다. 프로젝트 최상위 터미널에서 실행합니다.
@@ -55,6 +59,7 @@ bash hf_colab_gpu/run_pipeline_colab.sh
 
 ## 강의 자료
 
+- [초보자를 위한 코드 해설 노트북 3개](hf_colab_gpu/explanations/README.md)
 - [Pipeline 추론·셸 시연·스킬 등록 예시](hf_colab_gpu/pipeline-guide.md)
 - [실제 T4 셸 시연 결과와 종료 기록](hf_colab_gpu/pipeline-demo-results.md)
 - [AI 코딩 네 가지 문제와 진행 방법](hf_colab_gpu/ai-coding-workshop.md)

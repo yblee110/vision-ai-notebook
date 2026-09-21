@@ -1,4 +1,4 @@
-"""Distribute only the HF course, with exactly three student notebooks."""
+"""Distribute only the HF course and its three reading companions."""
 import importlib.util
 from pathlib import Path
 import stat
@@ -72,7 +72,7 @@ def test_zip_keeps_hf_course_and_compact_evidence_only(tmp_path):
     assert not names.intersection(excluded)
     assert {name for name in names if name.endswith(".ipynb")} == {
         f"hf_colab_gpu/notebooks/{name}" for name in package.HF_NOTEBOOKS
-    }
+    } | {f"hf_colab_gpu/explanations/{name}" for name in package.HF_EXPLANATIONS}
     assert result["files"] == len(names)
 
 
@@ -80,6 +80,14 @@ def test_zip_keeps_hf_course_and_compact_evidence_only(tmp_path):
 def test_missing_hf_notebook_aborts_distribution(tmp_path, notebook):
     root = fixture_root(tmp_path)
     (root / "hf_colab_gpu/notebooks" / notebook).unlink()
+    with pytest.raises(FileNotFoundError, match=notebook):
+        package.build_distribution(tmp_path / "students.zip", root)
+
+
+@pytest.mark.parametrize("notebook", package.HF_EXPLANATIONS)
+def test_missing_explanation_notebook_aborts_distribution(tmp_path, notebook):
+    root = fixture_root(tmp_path)
+    (root / "hf_colab_gpu/explanations" / notebook).unlink()
     with pytest.raises(FileNotFoundError, match=notebook):
         package.build_distribution(tmp_path / "students.zip", root)
 
@@ -116,6 +124,7 @@ def test_symlinked_required_source_aborts_distribution(tmp_path):
     "vision_ai_notbook/notebook_sources/training.py",
     "vision_ai_notbook/validation/direct/gpu/report.json",
     "vision_ai_notbook/hf_colab_gpu/validation/gpu/token.json",
+    "vision_ai_notbook/hf_colab_gpu/explanations/unreviewed_output.ipynb",
     "vision_ai_notbook/../outside.py",
     "/vision_ai_notbook/README.md",
 ])
