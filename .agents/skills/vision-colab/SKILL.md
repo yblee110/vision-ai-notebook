@@ -7,6 +7,8 @@ description: vision_ai_notbook에서 Hugging Face CLI로 모델을 준비하고 
 
 `.vision-lab-root`로 프로젝트를 찾는다. 기본 과정의 명령·경로·설치 파일은 [Hugging Face CLI + Colab GPU 안내](../../../hf_colab_gpu/README.md)를 기준으로 삼는다. 모델·학습 코드는 노트북에 보이는 셀을 그대로 사용하고, 별도 통합 실행 함수나 프로젝트 패키지로 감싸지 않는다.
 
+Hub 모델의 `pipeline()` 추론을 `.sh`로 시연하는 요청은 [Pipeline 안내](../../../hf_colab_gpu/pipeline-guide.md)와 [vision-pipeline-inference](../vision-pipeline-inference/SKILL.md)를 사용한다. 이 경로는 별도 추론 시연이며 아래 노트북 학습 흐름을 대체하지 않는다.
+
 1. 프로젝트의 `.venv/bin/python scripts/doctor.py`로 Python과 라이브러리 경로를 확인한다. 가상환경이 없으면 `bash scripts/setup.sh`로 기본 공개 라이브러리를 설치한다. `hf_colab_gpu/notebooks/00_hf_download_and_data.ipynb`는 Codespaces CPU에서 실행한다. 이 노트북의 `hf download`로 모델 원본을 받고, 다운로드 기록과 데이터를 준비한 뒤 `doctor.py --data`로 검사한다.
 2. 계획 요청에는 실행 위치·설정·필요 파일·공식 CLI 명령을 보여 준다. 실제 원격 실행 요청이 있을 때만 세션을 만든다. GPU 실행 전에 01·02의 네 학생 실습 셀을 작성·저장하고 `python scripts/check_student_cells.py`로 문법과 함수 정의를 확인한다. 실습을 대신 풀어 달라는 요청이 없으면 빈칸에 정답을 자동으로 채우지 않는다. GPU 실행 순서는 `hf_colab_gpu/notebooks/01_gpu_inference.ipynb` → `02_gpu_finetuning.ipynb`다. Codespaces에서 실행한 Python을 Colab GPU 실행으로 취급하지 않는다.
 3. 먼저 터미널에서 `colab --auth oauth2 sessions`로 인증과 기존 세션을 확인한다. CLI 0.6.0에는 `login` 명령이 없다. 필요한 인증 코드는 사용자가 터미널에 입력하며, 인증을 끝내기 전에 표준 입력으로 실행 코드를 전달하지 않는다. 기존 ADC 사용자는 준비된 인증을 유지하고 모든 관련 명령에 `--auth adc`를 적용한다.

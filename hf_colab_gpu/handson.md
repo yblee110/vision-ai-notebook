@@ -9,10 +9,11 @@
 | 시간 | 활동 | 확인할 내용 |
 |---|---|---|
 | 0–35분 | Colab CLI·HF CLI·모델·가속기 소개 | 어디서 파일을 받고 어디서 연산하는가 |
-| 35–55분 | Codespaces 준비와 00번 노트북 | 모델 3개 파일, 데이터 500/100/200장 |
-| 55–85분 | Colab GPU 연결·전송·01번 추론 | 실제 GPU 이름과 원본 모델 Top-5 |
-| 85–135분 | 02번 분류기 학습·파인튜닝 | 같은 테스트 이미지의 예측 변화 |
-| 135–155분 | 저장·복원·결과 회수·종료 | 모델 재로딩과 GPU 세션 종료 |
+| 35–55분 | Codespaces·devcontainer 준비와 00번 | Python·커널 경로, 모델 3개 파일, 데이터 500/100/200장 |
+| 55–70분 | Hub Pipeline과 셸 파일 시연 | 새 Colab T4에서 추론·결과 회수·종료 |
+| 70–100분 | Colab GPU 연결·전송·01번 추론 | Pipeline과 직접 작성한 함수의 결과 비교 |
+| 100–150분 | 02번 분류기 학습·파인튜닝 | 같은 테스트 이미지의 예측 변화 |
+| 150–170분 | 저장·복원·결과 회수·종료 | 모델 재로딩과 GPU 세션 종료 |
 
 처음 설치하거나 자원을 기다리는 시간은 계정·네트워크에 따라 달라집니다. 위 표는 실습 운영 예시입니다. 1시간 발표자료를 함께 쓰는 경우 소개 시간을 60분으로 잡고 뒤의 일정을 조정합니다.
 
@@ -26,6 +27,8 @@ Colab CU와 Codespaces 사용료는 별개입니다. Colab CU 잔액·할당 가
 
 ## 00 · 모델 다운로드와 데이터 준비
 
+노트북 맨 앞의 devcontainer 안내부터 읽습니다. Fork한 저장소의 `.devcontainer/devcontainer.json`은 Dockerfile·설치 명령·확장을 연결하고, Dockerfile은 Python 3.12와 `uv`를 준비합니다. 자동으로 실행되는 `scripts/setup.sh`가 `.venv`와 `Vision AI (Codespaces CPU)` 커널을 만듭니다. 터미널에서 `python scripts/doctor.py`를 실행한 뒤 노트북도 같은 가상환경의 커널을 사용하는지 확인합니다.
+
 `hf download`의 네 요소를 확인합니다. 모델 ID, 받을 파일 이름, 고정 revision, 저장할 폴더입니다. revision을 고정하면 같은 모델 버전을 다시 받을 수 있습니다. 파일 SHA-256 검사까지 마친 뒤 다음 단계로 갑니다.
 
 공개 모델 `facebook/deit-tiny-patch16-224`는 ImageNet 1,000개 클래스로 사전학습됐습니다. 이 모델은 Transformers의 ViT 분류 모델로 불러옵니다. 이번 고정 revision의 원본 가중치는 `pytorch_model.bin`이며, 학습 후 저장하는 파일은 Safetensors입니다. 형식이 다른 것은 다운로드 실패가 아닙니다.
@@ -33,6 +36,24 @@ Colab CU와 Codespaces 사용료는 별개입니다. Colab CU 잔액·할당 가
 데이터는 학습·검증·테스트로 나눕니다. 학습은 가중치 업데이트, 검증은 저장할 모델 선택, 테스트는 최종 성능 확인에 사용합니다. CIFAR-100의 원본 이미지는 32×32입니다. 모델 입력인 224×224로 늘려도 새로운 세부 정보가 생기지는 않습니다.
 
 실행할 파일: [00_hf_download_and_data.ipynb](notebooks/00_hf_download_and_data.ipynb)
+
+## 시연 · Pipeline으로 추론하고 `.sh`로 실행하기
+
+Transformers의 `pipeline("image-classification", model=모델_ID, ...)`은 전처리·모델 계산·라벨 정리를 연결합니다. 01번에서 직접 작성할 처리 흐름의 결과를 적은 코드로 먼저 확인합니다. 모델 ID를 넘기면 Hub에서 해당 모델을 내려받으며, 연산은 `pipeline()`을 실행한 컴퓨터에서 합니다.
+
+프로젝트 최상위 Codespaces 터미널에서 실행합니다.
+
+```bash
+bash hf_colab_gpu/run_pipeline_colab.sh --dry-run
+colab --auth oauth2 sessions
+bash hf_colab_gpu/run_pipeline_colab.sh
+```
+
+첫 명령은 설명만 보여 줍니다. 두 번째 명령을 직접 실행해 본인 Google 로그인을 마친 뒤 마지막 명령으로 시연합니다. 새 T4에서 00번의 첫 cup 이미지를 추론한 뒤 JSON을 회수하고 종료합니다. 래퍼는 모델 준비·설치·파일 전송과 종료를 묶은 셸 코드입니다. 실제 추론은 `pipeline_inference.py`에서 공개 라이브러리를 직접 불러와 수행합니다.
+
+결과의 모델·revision, 장치 이름, Top-5, 실행 ID와 세션 종료 확인을 읽습니다. 사진을 바꿔 실행한 뒤 상위 라벨과 점수가 어떻게 달라졌는지 설명합니다. 원본 모델은 1,000개 ImageNet 라벨을 출력하므로 우리 다섯 클래스의 정확도로 해석하지 않습니다.
+
+선택 시연에서는 `.agents/skills/vision-pipeline-inference/SKILL.md`를 읽고 AI 코딩 도구에 `$vision-pipeline-inference`로 이 명령을 요청합니다. 스킬이 새 모델을 만드는 것이 아니라 기존 셸 명령을 실행한다는 연결을 확인합니다. [추론 코드·옵션·스킬 등록 설명](pipeline-guide.md)
 
 ## AI와 네 개의 핵심 코드 셀 채우기
 
@@ -43,6 +64,8 @@ GPU 세션을 만들기 전에 Codespaces에서 네 셀을 채워 저장하고 `
 ## 01 · GPU 연결과 원본 추론
 
 [단계별 실행 안내](README.md)에 따라 Google 로그인 → T4 생성 → 라이브러리 설치 → 커널 재시작 → 파일 전송을 진행합니다. Colab 커널에서 `torch.cuda.is_available()`과 장치 이름을 확인합니다.
+
+노트북의 Pipeline 예제에서는 같은 Hub 모델의 Top-5를 먼저 봅니다. 이어지는 두 빈칸은 추론 함수와 Top-k 정리를 직접 만들어 보는 문제입니다. 같은 입력에서 Pipeline과 작성한 함수의 결과가 맞는지 확인하고, 다르다면 모델 버전·전처리·정렬 방식을 점검합니다.
 
 모델을 불러오는 핵심 코드는 다음 두 호출입니다.
 

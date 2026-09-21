@@ -11,6 +11,8 @@
 3. 자동 환경 설치가 끝날 때까지 기다린 뒤 아래 명령으로 준비 상태를 확인합니다.
 4. 기본 노트북 00번을 열고 **커널 선택 → Jupyter 커널 → Vision AI (Codespaces CPU)**를 선택해 실행합니다.
 
+00번 앞부분에 **devcontainer 파일별 역할, 자동 설치, Python·커널 확인, 컨테이너 재빌드** 안내가 있습니다. 환경 준비가 낯설다면 코드 셀보다 이 안내를 먼저 읽습니다.
+
 `.devcontainer`와 설치 설정은 Fork에 함께 포함됩니다. 기본 환경은 HF CLI·Colab CLI와 데이터 준비 라이브러리만 설치합니다. Google 로그인과 Colab GPU 할당은 학생이 본인 계정으로 실습 중 진행합니다. Codespaces와 Colab의 사용량은 별도로 관리합니다.
 
 ```bash
@@ -25,15 +27,36 @@ python scripts/doctor.py
 | 노트북 | 실행 위치 | 하는 일 |
 |---|---|---|
 | [00 · HF CLI와 데이터 준비](hf_colab_gpu/notebooks/00_hf_download_and_data.ipynb) | Codespaces CPU | 실제 `hf download`, 모델 파일 확인, 이미지 분할 |
-| [01 · GPU 추론](hf_colab_gpu/notebooks/01_gpu_inference.ipynb) | Colab GPU | `from_pretrained`, 이미지 전처리, Top-5 예측 |
+| [01 · GPU 추론](hf_colab_gpu/notebooks/01_gpu_inference.ipynb) | Colab GPU | Hub 모델 `pipeline()`, 직접 작성한 추론 함수, Top-5 비교 |
 | [02 · GPU 파인튜닝](hf_colab_gpu/notebooks/02_gpu_finetuning.ipynb) | Colab GPU | 분류기 학습, 마지막 블록 파인튜닝, 비교·저장·재로딩 |
 
 01·02에는 **각각 두 개의 빈 실습 코드 셀**이 있습니다. [문제 조건과 프롬프트](hf_colab_gpu/ai-coding-workshop.md)를 읽고 AI와 코드를 작성한 뒤, GPU를 만들기 전에 `python scripts/check_student_cells.py`로 빈 셀과 문법을 확인합니다. 같은 노트북의 확인 셀과 실행 결과로 답을 점검하며 별도 정답 노트북은 없습니다.
 
 01·02는 Codespaces에서 편집하고 공식 `colab exec -f ...ipynb`로 실행합니다. GPU 연결·설치·입력 전송을 먼저 해야 하므로 [단계별 실행 안내](hf_colab_gpu/README.md)를 따라가세요. Codespaces CPU의 Run All은 Colab GPU에 자동으로 연결되지 않습니다.
 
+## 짧은 시연 · Pipeline 추론을 셸 파일로 실행하기
+
+00번을 마치면 같은 Hub 모델을 불러와 이미지 한 장을 추론하는 시연을 먼저 할 수 있습니다. 프로젝트 최상위 터미널에서 실행합니다.
+
+```bash
+# 로그인·GPU 생성 없이 실행 계획만 확인합니다.
+bash hf_colab_gpu/run_pipeline_colab.sh --dry-run
+
+# 처음에는 이 명령을 직접 실행해 본인 Google 로그인을 마칩니다.
+colab --auth oauth2 sessions
+
+# 실제 시연: 새 Colab T4 → Hub 모델 추론 → 결과 회수 → 세션 종료
+bash hf_colab_gpu/run_pipeline_colab.sh
+```
+
+기본 입력은 00번이 준비한 테스트 데이터의 첫 cup 이미지입니다. 본인 사진은 `--image custom_images/my-cup.png`로 지정합니다. 실제 실행에는 본인 Google 인증과 Colab 자원이 필요하며 결과는 실행별 폴더에 저장됩니다. 기존 학습 세션은 재사용하지 않습니다.
+
+[Pipeline 코드·셸 시연·선택 스킬 등록 안내](hf_colab_gpu/pipeline-guide.md)에서 각 명령의 역할과 출력 확인 방법을 읽습니다. 스킬 예제는 `.agents/skills/vision-pipeline-inference`에 있으며 같은 셸 파일을 호출합니다. 01·02번의 빈 실습 셀은 그대로 남아 있습니다.
+
 ## 강의 자료
 
+- [Pipeline 추론·셸 시연·스킬 등록 예시](hf_colab_gpu/pipeline-guide.md)
+- [실제 T4 셸 시연 결과와 종료 기록](hf_colab_gpu/pipeline-demo-results.md)
 - [AI 코딩 네 가지 문제와 진행 방법](hf_colab_gpu/ai-coding-workshop.md)
 - [학생 교안](hf_colab_gpu/handson.md)
 - [이번 HF·PyTorch GPU 실측 결과](hf_colab_gpu/test-results.md)
@@ -44,6 +67,6 @@ python scripts/doctor.py
 
 기본 데이터는 병·그릇·캔·컵·접시 5개 클래스이며 학습 500장·검증 100장·테스트 200장입니다. 32×32 공개 이미지로 실습 흐름을 배우는 것이므로 실제 작업대 카메라 성능과 구분합니다. 원본 ImageNet 1,000개 라벨 추론과 새 5개 라벨 분류의 정확도를 직접 비교하지 않습니다.
 
-`hf_colab_gpu/validation`은 2026-09-19 실행에서 남긴 보고서·CSV·그림을 담은 참고 폴더입니다. 추가로 실행할 노트북은 없습니다. 당시의 완성된 코드로 측정한 수치이므로 학생이 채운 코드의 결과와 구분합니다.
+`hf_colab_gpu/validation`은 2026-09-19 기본 과정과 2026-09-21 Pipeline 시연의 보고서·CSV·그림을 담은 참고 폴더입니다. 추가로 실행할 노트북은 없습니다. 각 기록의 날짜와 실행 범위를 확인하고 학생이 채운 코드의 결과와 구분합니다.
 
 `.devcontainer`, `requirements`, `scripts`, `tests`는 세 노트북의 환경 준비와 검사를 위한 파일입니다. 다운로드한 모델·개인 사진·학습 결과·인증 정보·가상환경은 저장소에 올리지 않습니다.

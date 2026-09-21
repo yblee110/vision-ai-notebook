@@ -8,7 +8,7 @@
 |---|---|---|
 | Hugging Face CLI의 `hf download` | 원본 모델과 전처리 설정 다운로드 | Codespaces |
 | Colab CLI의 `colab` | GPU 생성·파일 전송·노트북 실행·회수·종료 | 명령은 Codespaces, 연산은 Colab |
-| Transformers | 모델 구조와 이미지 전처리 불러오기 | Colab GPU |
+| Transformers | `pipeline()` 추론, 모델 구조와 이미지 전처리 불러오기 | Colab GPU |
 | PyTorch | GPU 추론, 손실·미분·가중치 업데이트 | Colab GPU |
 | NumPy·Pillow·PyArrow | 이미지 읽기와 데이터 분할 | Codespaces |
 
@@ -23,6 +23,8 @@ python scripts/doctor.py
 
 처음 VS Code가 폴더 신뢰 여부를 물으면, 본인이 만든 강의 저장소인지 확인한 뒤 신뢰를 승인합니다. [00_hf_download_and_data.ipynb](notebooks/00_hf_download_and_data.ipynb)를 열고 **커널 선택 → Jupyter 커널 → Vision AI (Codespaces CPU)**를 선택한 뒤 **모두 실행(Run All)**을 누릅니다.
 
+00번 앞부분에 Fork·Codespace 생성부터 devcontainer 설정 파일, 자동 설치, Python 경로, 커널 선택, 재빌드까지 안내했습니다. `devcontainer.json`이 `Dockerfile`과 `scripts/setup.sh`를 어떻게 연결하는지 읽고 첫 코드 셀로 넘어가세요.
+
 이 노트북이 아래 공개 CLI를 실제로 호출합니다.
 
 ```bash
@@ -36,6 +38,23 @@ hf download facebook/deit-tiny-patch16-224 config.json preprocessor_config.json 
 `hf download`는 모델 파일을 받는 명령입니다. 그 파일의 가중치를 Python 모델로 읽는 단계는 GPU 노트북의 `from_pretrained(...)`가 담당합니다. [고정 버전 CLI 문서](https://github.com/huggingface/huggingface_hub/blob/v0.36.0/docs/source/en/guides/cli.md)
 
 준비가 끝나면 `hf_colab_gpu/models/deit-tiny`에 모델 3개 파일과 `download_manifest.json`, `data/prepared`에 데이터 3개 NPZ와 `manifest.json`이 생깁니다.
+
+## 먼저 시연하기 · Hub 모델 Pipeline → 셸 파일
+
+[Pipeline 시연 안내](pipeline-guide.md)의 `transformers.pipeline()`은 Hub의 모델 ID와 고정 revision으로 이미지를 분류합니다. Python 추론 코드를 `.sh`로 감싸 Colab GPU에서 실행하고 결과까지 회수해 봅니다.
+
+```bash
+# 로그인이나 GPU 생성 없이 명령과 경로를 먼저 확인합니다.
+bash hf_colab_gpu/run_pipeline_colab.sh --dry-run
+
+# 처음에는 터미널에서 본인 Google 로그인을 먼저 마칩니다.
+colab --auth oauth2 sessions
+
+# 새 T4에서 추론하고 이번에 만든 세션을 종료합니다.
+bash hf_colab_gpu/run_pipeline_colab.sh
+```
+
+시연은 00번이 준비한 첫 cup 이미지와 별도 T4 세션을 사용합니다. `--image custom_images/my-cup.png`로 본인 이미지를 지정할 수도 있습니다. 이 자동 시연은 설치·실행·JSON 회수 후 종료까지 진행하며 실패한 경우에도 종료를 시도합니다. 뒤의 01·02번 수동 학습 세션은 별도로 만듭니다. 인증 방식, 로그, 오류 처리와 선택 스킬 예제는 [시연 안내](pipeline-guide.md)를 따릅니다.
 
 ## GPU 생성 전 · AI 코딩 실습 준비
 
@@ -126,7 +145,7 @@ colab upload -s hf-vision-gpu data/prepared/test.npz content/vision-ai/data/prep
 colab exec -s hf-vision-gpu -f hf_colab_gpu/notebooks/01_gpu_inference.ipynb --timeout 1800
 ```
 
-`01_gpu_inference_output.ipynb`의 모든 코드 셀에 오류가 없는지 확인한 뒤 다음 노트북으로 넘어갑니다. 기존 1,000개 ImageNet 라벨로 나온 Top-5는 관찰용입니다.
+01번의 Hub 모델 `pipeline()` 예제와 직접 작성한 추론 함수의 결과를 비교합니다. `01_gpu_inference_output.ipynb`의 모든 코드 셀에 오류가 없는지 확인한 뒤 다음 노트북으로 넘어갑니다. 기존 1,000개 ImageNet 라벨로 나온 Top-5는 관찰용입니다.
 
 [02_gpu_finetuning.ipynb](notebooks/02_gpu_finetuning.ipynb)는 같은 원본 모델에서 새 5개 클래스 분류기를 학습한 뒤, 마지막 Transformer 블록·최종 정규화·분류기를 함께 학습합니다.
 
@@ -164,6 +183,8 @@ Colab 종료 뒤 결과 폴더와 출력 노트북을 학생 PC로 내려받고 
 
 ## 수업 자료
 
+- [Pipeline 추론·셸 시연·스킬 등록 예시](pipeline-guide.md)
+- [실제 T4 셸 시연 결과와 종료 기록](pipeline-demo-results.md)
 - [AI 코딩 네 가지 문제와 진행 방법](ai-coding-workshop.md)
 - [학생 교안](handson.md)
 - [실제 검증 결과](test-results.md)

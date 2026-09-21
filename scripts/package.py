@@ -21,6 +21,8 @@ HF_FILES = (
     "hf_colab_gpu/inference_exercises.py", "hf_colab_gpu/finetuning_exercises.py",
     "hf_colab_gpu/ai-coding-workshop.md", "hf_colab_gpu/build_gpu_notebooks.py",
     "hf_colab_gpu/build_final_guide.py",
+    "hf_colab_gpu/pipeline_inference.py", "hf_colab_gpu/run_pipeline_colab.sh",
+    "hf_colab_gpu/pipeline-guide.md", "hf_colab_gpu/pipeline-demo-results.md",
     *(f"hf_colab_gpu/notebooks/{name}" for name in HF_NOTEBOOKS),
 )
 FILES = (
@@ -30,8 +32,11 @@ FILES = (
     "scripts/doctor.py", "scripts/check_student_cells.py", "scripts/package.py",
     "tests/test_distribution.py", "tests/test_environment.py",
     "tests/test_hf_notebooks.py", "tests/test_student_cells.py",
+    "tests/test_pipeline_inference.py", "tests/test_pipeline_wrapper.py",
     ".agents/skills/vision-colab/SKILL.md",
     ".agents/skills/vision-colab/agents/openai.yaml",
+    ".agents/skills/vision-pipeline-inference/SKILL.md",
+    ".agents/skills/vision-pipeline-inference/agents/openai.yaml",
     *HF_FILES,
 )
 REQUIRED = set(FILES)
@@ -56,6 +61,10 @@ HF_EVIDENCE_FILES = {
     "hf_colab_gpu/validation/gpu/pretrained_top5.png",
     "hf_colab_gpu/validation/gpu/learning_curves.png",
     "hf_colab_gpu/validation/gpu/confusion_comparison.png",
+    "hf_colab_gpu/validation/pipeline-demo/result.json",
+    "hf_colab_gpu/validation/pipeline-demo/cleanup.json",
+    "hf_colab_gpu/validation/pipeline-demo/public-input.json",
+    "hf_colab_gpu/validation/pipeline-demo/input.png",
 }
 ALLOWED_FILES = REQUIRED | HF_EVIDENCE_FILES
 EXCLUDED_PARTS = {

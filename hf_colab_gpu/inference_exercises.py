@@ -31,6 +31,54 @@ def _task(exercise_id, expected_function):
     })
 
 
+def pipeline_example_cells():
+    """Provided demonstration before the two student tasks; reuse loaded objects."""
+    cells = [_md("""
+        ## 3-1. 먼저 `pipeline()`으로 추론해 보기
+
+        Hugging Face의 `pipeline()`은 **전처리 → 모델 추론 → 결과 정리**를 한 번에 처리합니다.
+        `image-classification`은 사진을 분류하는 작업이며, 결과의 `label`은 예측 이름,
+        `score`는 모델이 계산한 점수입니다. 점수가 높다고 정답이 보장되지는 않습니다.
+
+        아래 코드는 완성된 예제입니다. 그대로 실행해 결과를 본 뒤 `PIPELINE_TOP_K`를 `1`이나 `3`으로 바꿔 보세요.
+        이 노트북에서는 00번에서 HF CLI로 내려받은 **Hub 모델**과 전처리 도구를 재사용하므로
+        추가 다운로드가 없습니다. 예측 이름은 ImageNet의 1,000개 항목이며,
+        실습 데이터의 정답 5종(bottle·bowl·can·cup·plate)과는 다릅니다.
+    """), _code('''
+        from transformers import pipeline
+
+        PIPELINE_TOP_K = 5
+        pipeline_class = classes.index("cup")
+        pipeline_index = int(np.flatnonzero(splits["test"]["labels"] == pipeline_class)[0])
+        pipeline_image = Image.fromarray(splits["test"]["images"][pipeline_index]).convert("RGB")
+        model.eval()
+        image_classifier = pipeline(
+            "image-classification", model=model, image_processor=processor,
+            framework="pt", device=device,
+        )
+        pipeline_predictions = image_classifier(pipeline_image, top_k=PIPELINE_TOP_K)
+        print("실습 데이터 정답:", classes[pipeline_class])
+        print("pipeline 출력: label(이름), score(점수)")
+        for item in pipeline_predictions:
+            print(f"{item['score']:6.2%}  {item['label']}")
+    '''), _md("""
+        **관찰할 내용:** `top_k`를 바꾸면 보여 주는 후보 수가 달라집니다.
+        같은 사진과 모델을 썼다면 공통 후보의 점수는 같습니다. 점수와 후보 수를 구분해 설명해 보세요.
+
+        Hub에서 바로 불러오는 별도 예제는 [pipeline 추론 코드](../pipeline_inference.py)에 있습니다.
+        그 예제는 `pipeline(model=MODEL_ID, revision=MODEL_REVISION, ...)`처럼 Hub 모델 ID와
+        커밋을 지정합니다. 처음 실행할 때 모델을 내려받고 이후에는 캐시를 활용합니다.
+        [셸 시연 안내](../pipeline-guide.md)를 따르면 같은 코드를 Colab GPU에서 한 명령으로 실행할 수 있습니다.
+
+        다음 두 빈칸 실습에서는 `pipeline()` 안에서 처리하던 과정을 나눠 직접 만들어 봅니다.
+        방금 실행한 완성 예제와 빈칸 확인 결과는 따로 관리하므로, 두 함수를 작성해야 확인 셀을 통과합니다.
+    """)]
+    for index, cell in enumerate(cells):
+        cell["id"] = f"pipeline-demo-{index + 1}"
+        cell["metadata"]["tags"] = ["provided-pipeline-demo"]
+    return cells
+
+
 def adapt_inference(cells):
     """Adapt the original 13 cells; fail loudly if their source layout changes."""
     assert len(cells) == 13, "Original inference notebook layout changed"
@@ -68,7 +116,7 @@ def adapt_inference(cells):
 '''
     original[10]["source"] = guard + original[10]["source"]
     original[12]["source"] = guard + original[12]["source"]
-    result = [original[0], reset, *original[1:8], _md("""
+    result = [original[0], reset, *original[1:8], *pipeline_example_cells(), _md("""
         ## 4. 실습 1 — 이미지에서 확률 구하기
 
         모델에 사진 한 장을 넣고, 1,000개 분류 각각의 확률을 받는 함수 하나를 만듭니다.
