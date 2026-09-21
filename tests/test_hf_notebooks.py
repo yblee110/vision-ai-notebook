@@ -11,10 +11,10 @@ def test_completed_training_report_blocks_every_following_cell(tmp_path):
         / "hf_colab_gpu/notebooks/02_gpu_finetuning.ipynb"
     )
     notebook = nbformat.read(notebook_path, as_version=4)
-    cells = [cell.source for cell in notebook.cells if cell.cell_type == "code"]
+    cells = [cell for cell in notebook.cells if cell.cell_type == "code"]
     settings_index = next(
-        i for i, source in enumerate(cells)
-        if 'if (OUTPUT_DIR / "report.json").exists():' in source
+        i for i, cell in enumerate(cells)
+        if 'if (OUTPUT_DIR / "report.json").exists():' in cell.source
     )
     existing = {
         "report.json": b'{"status":"completed","previous_run":true}',
@@ -30,13 +30,19 @@ def test_completed_training_report_blocks_every_following_cell(tmp_path):
         destination.write_bytes(contents)
     namespace = {"OUTPUT_DIR": tmp_path, "TRAINING_ALLOWED": True}
     with pytest.raises(FileExistsError):
-        exec(cells[settings_index], namespace)
+        exec(cells[settings_index].source, namespace)
     assert namespace["TRAINING_ALLOWED"] is False
 
     # Match the CLI behavior: attempt every later cell despite the first error.
-    for source in cells[settings_index + 1:]:
+    for cell in cells[settings_index + 1:]:
+        if "student-task" in cell.metadata.get("tags", []):
+            assert cell.source == "", "Student task cells must remain genuinely empty."
+            before = namespace.copy()
+            exec(cell.source, namespace)
+            assert namespace == before
+            continue
         with pytest.raises(RuntimeError, match="학습 준비가 완료되지"):
-            exec(source, namespace)
+            exec(cell.source, namespace)
     observed = {
         str(path.relative_to(tmp_path)): path.read_bytes()
         for path in tmp_path.rglob("*") if path.is_file()

@@ -1,7 +1,8 @@
-"""Distribution must retain setup assets while excluding local state and old code."""
+"""Distribute only the HF course, with exactly three student notebooks."""
 import importlib.util
 from pathlib import Path
-from zipfile import ZipFile
+import stat
+from zipfile import ZipFile, ZipInfo
 
 import pytest
 
@@ -20,16 +21,20 @@ def fixture_root(tmp_path):
     return root
 
 
-def test_zip_keeps_required_files_but_not_state_or_legacy(tmp_path):
+def test_zip_keeps_hf_course_and_compact_evidence_only(tmp_path):
     root = fixture_root(tmp_path)
     excluded = [
         ".local-state/colab-cli/token.json", ".venv/bin/python", ".cache/download.bin",
         "runs/gpu/report.json", "results/gpu/report.json", "custom_images/test/cup.jpg",
         "vision_lab/model.py", "pyproject.toml", "presentation/output/old.pptx",
-        "validation/old/report.json", "validation/direct/gpu/finetuned_checkpoint.npz",
-        "validation/direct/gpu/raw.log", "validation/direct/gpu/session.json",
+        "validation/old/report.json", "validation/direct/gpu/report.json",
+        "validation/direct/gpu/finetuned_checkpoint.npz", "assets/pretrained/config.json",
+        "notebook_sources/training.py", "docs/lecture.md", "scripts/build_notebooks.py",
+        "scripts/build_final_guide.py", "tests/test_direct_training.py",
+        "requirements/codespaces-jax.txt", "requirements/gpu.txt", "requirements/tpu.txt",
         ".agents/skills/vision-colab/token.yaml", "scripts/credentials.py",
-        "notebooks/02_gpu_finetuning_output.ipynb", "scripts/__pycache__/cached.py",
+        "notebooks/03_tpu_and_compare.ipynb", "notebooks/02_gpu_finetuning_output.ipynb",
+        "scripts/__pycache__/cached.py", "hf_colab_gpu/build_prepare_notebook.py",
         "hf_colab_gpu/models/deit-tiny/pytorch_model.bin",
         "hf_colab_gpu/models/deit-tiny/config.json", "hf_colab_gpu/data/train.npz",
         "hf_colab_gpu/.cache/huggingface/token", "hf_colab_gpu/results/report.json",
@@ -39,52 +44,99 @@ def test_zip_keeps_required_files_but_not_state_or_legacy(tmp_path):
         "hf_colab_gpu/validation/gpu/finetuned_model/config.json",
         "hf_colab_gpu/validation/gpu/finetuned_model/report.json",
         "hf_colab_gpu/validation/gpu/raw.log", "hf_colab_gpu/credentials.md",
+        "hf_colab_gpu/validation/gpu/01_gpu_inference_output.ipynb",
+        "hf_colab_gpu/validation/codespaces/00_hf_download_and_data.ipynb",
+        "hf_colab_gpu/validation/old/report.json",
     ]
     for name in excluded:
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("private or obsolete")
-    evidence = root / "validation/direct/gpu/report.json"
-    evidence.write_text('{"status": "completed"}')
-    hf_evidence = root / "hf_colab_gpu/validation/gpu/report.json"
-    hf_evidence.write_text('{"status": "completed", "framework": "pytorch"}')
-    hf_executed = root / "hf_colab_gpu/validation/gpu/01_gpu_inference_output.ipynb"
-    hf_executed.write_text('{"cells": []}')
-    (root / "hf_colab_gpu/build_notebooks.py").write_text("# Standalone notebook builder")
+    evidence = {
+        "hf_colab_gpu/validation/gpu/report.json": b'{"status": "completed"}',
+        "hf_colab_gpu/validation/gpu/training.csv": b"epoch,loss\n1,0.5\n",
+        "hf_colab_gpu/validation/gpu/learning_curves.png": b"PNG fixture",
+        "hf_colab_gpu/validation/codespaces/completed/report.json": b'{"passed": true}',
+    }
+    for name, data in evidence.items():
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
     artifact = tmp_path / "students.zip"
     result = package.build_distribution(artifact, root)
     with ZipFile(artifact) as archive:
         names = {name.removeprefix("vision_ai_notbook/") for name in archive.namelist()}
+        for name, data in evidence.items():
+            assert archive.read(f"vision_ai_notbook/{name}") == data
     assert package.REQUIRED <= names
     assert not names.intersection(excluded)
-    assert "validation/direct/gpu/report.json" in names
-    assert "hf_colab_gpu/validation/gpu/report.json" in names
-    assert "hf_colab_gpu/validation/gpu/01_gpu_inference_output.ipynb" in names
-    assert "hf_colab_gpu/build_notebooks.py" in names
+    assert {name for name in names if name.endswith(".ipynb")} == {
+        f"hf_colab_gpu/notebooks/{name}" for name in package.HF_NOTEBOOKS
+    }
     assert result["files"] == len(names)
 
 
-def test_missing_notebook_aborts_distribution(tmp_path):
+@pytest.mark.parametrize("notebook", package.HF_NOTEBOOKS)
+def test_missing_hf_notebook_aborts_distribution(tmp_path, notebook):
     root = fixture_root(tmp_path)
-    (root / "notebooks/03_tpu_and_compare.ipynb").unlink()
-    with pytest.raises(FileNotFoundError, match="03_tpu_and_compare.ipynb"):
+    (root / "hf_colab_gpu/notebooks" / notebook).unlink()
+    with pytest.raises(FileNotFoundError, match=notebook):
         package.build_distribution(tmp_path / "students.zip", root)
 
 
-def test_missing_basic_hf_notebook_aborts_distribution(tmp_path):
-    root = fixture_root(tmp_path)
-    (root / "hf_colab_gpu/notebooks/01_gpu_inference.ipynb").unlink()
-    with pytest.raises(FileNotFoundError, match="01_gpu_inference.ipynb"):
-        package.build_distribution(tmp_path / "students.zip", root)
-
-
-def test_symlinked_source_cannot_add_external_files(tmp_path):
+def test_symlinked_optional_evidence_is_excluded(tmp_path):
     root = fixture_root(tmp_path)
     outside = tmp_path / "external"
     outside.mkdir()
-    (outside / "secret.py").write_text("do not distribute")
-    (root / "scripts/linked").symlink_to(outside, target_is_directory=True)
-    (root / "scripts/other.py").symlink_to(outside / "secret.py")
+    (outside / "report.json").write_text("do not distribute")
+    (outside / "environment.json").write_text("do not distribute")
+    validation = root / "hf_colab_gpu/validation"
+    validation.mkdir()
+    (validation / "gpu").symlink_to(outside, target_is_directory=True)
+    (validation / "environment.json").symlink_to(outside / "environment.json")
     files = {path.relative_to(root).as_posix() for path in package.collect_files(root)}
-    assert "scripts/other.py" not in files
-    assert "scripts/linked/secret.py" not in files
+    assert "hf_colab_gpu/validation/gpu/report.json" not in files
+    assert "hf_colab_gpu/validation/environment.json" not in files
+
+
+def test_symlinked_required_source_aborts_distribution(tmp_path):
+    root = fixture_root(tmp_path)
+    outside = tmp_path / "external.py"
+    outside.write_text("do not distribute")
+    source = root / "scripts/doctor.py"
+    source.unlink()
+    source.symlink_to(outside)
+    with pytest.raises(FileNotFoundError, match="scripts/doctor.py"):
+        package.collect_files(root)
+
+
+@pytest.mark.parametrize("extra", [
+    "vision_ai_notbook/notebooks/03_tpu_and_compare.ipynb",
+    "vision_ai_notbook/hf_colab_gpu/validation/gpu/01_gpu_inference_output.ipynb",
+    "vision_ai_notbook/notebook_sources/training.py",
+    "vision_ai_notbook/validation/direct/gpu/report.json",
+    "vision_ai_notbook/hf_colab_gpu/validation/gpu/token.json",
+    "vision_ai_notbook/../outside.py",
+    "/vision_ai_notbook/README.md",
+])
+def test_archive_validation_rejects_unapproved_paths(tmp_path, extra):
+    root = fixture_root(tmp_path)
+    artifact = tmp_path / "students.zip"
+    package.build_distribution(artifact, root)
+    with ZipFile(artifact, "a") as archive:
+        archive.writestr(extra, "not allowed")
+    with pytest.raises(RuntimeError):
+        package.validate_archive(artifact)
+
+
+def test_archive_validation_rejects_symlink_entries(tmp_path):
+    root = fixture_root(tmp_path)
+    artifact = tmp_path / "students.zip"
+    package.build_distribution(artifact, root)
+    entry = ZipInfo("vision_ai_notbook/hf_colab_gpu/validation/gpu/report.json")
+    entry.create_system = 3
+    entry.external_attr = (stat.S_IFLNK | 0o777) << 16
+    with ZipFile(artifact, "a") as archive:
+        archive.writestr(entry, "/private/report.json")
+    with pytest.raises(RuntimeError, match="심볼릭 링크"):
+        package.validate_archive(artifact)

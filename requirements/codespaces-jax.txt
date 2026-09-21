@@ -1,5 +1,0 @@
-# 선택 심화: 기본 환경에 JAX·TPU 실습의 로컬 준비 라이브러리만 추가합니다.
--r codespaces.txt
-jax==0.11.1                 # CPU 추론, 자동 미분과 JIT 문법
-optax==0.2.8                # 손실 함수와 Adam 옵티마이저
-safetensors==0.8.0          # 기존 JAX 실습의 사전학습 가중치 읽기

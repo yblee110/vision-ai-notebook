@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""기본 HF CLI 환경과 선택 JAX 환경을 점검합니다. 로그인·원격 자원 할당은 하지 않습니다."""
+"""Codespaces의 HF CLI·Colab CLI 준비 환경을 점검합니다. 로그인·원격 자원 할당은 하지 않습니다."""
 from __future__ import annotations
 
 import argparse
@@ -30,11 +30,6 @@ DEPENDENCIES = {
     "nbclient": ("nbclient", "0.10.4"),
     "pytest": ("pytest", "9.1.1"),
 }
-JAX_DEPENDENCIES = {
-    "safetensors": ("safetensors", "0.8.0"),
-    "jax": ("jax", "0.11.1"),
-    "optax": ("optax", "0.2.8"),
-}
 
 
 def sha256(path: Path) -> str:
@@ -48,21 +43,10 @@ def sha256(path: Path) -> str:
 def contained_file(directory: Path, filename: str) -> Path:
     path = (directory / filename).resolve()
     if not path.is_relative_to(directory.resolve()):
-        raise ValueError(f"Asset path escapes its directory: {filename}")
+        raise ValueError(f"File path escapes its directory: {filename}")
     if not path.is_file():
         raise FileNotFoundError(path)
     return path
-
-
-def check_model(root: Path) -> str:
-    directory = root / "assets" / "pretrained"
-    source = json.loads((directory / "source.json").read_text())
-    checkpoint = contained_file(directory, source["converted_file"])
-    if sha256(checkpoint) != source["converted_sha256"]:
-        raise ValueError("Pretrained checkpoint SHA-256 mismatch")
-    for filename in ("config.json", "preprocessor_config.json"):
-        json.loads(contained_file(directory, filename).read_text())
-    return f"{source.get('model_id', 'pretrained model')}: checkpoint SHA-256 verified"
 
 
 def check_cli_kernel_api() -> str:
@@ -120,7 +104,7 @@ def configure_state(root: Path, user_home: Path | None = None) -> dict[str, str]
     return {"status": "ok", "detail": "Colab CLI auth/history will persist under ignored .local-state/colab-cli (mode 700)."}
 
 
-def run_checks(root: Path, require_data: bool = False, with_jax: bool = False) -> list[dict[str, str]]:
+def run_checks(root: Path, require_data: bool = False) -> list[dict[str, str]]:
     checks: list[dict[str, str]] = []
 
     def check(name: str, function) -> None:
@@ -136,8 +120,7 @@ def run_checks(root: Path, require_data: bool = False, with_jax: bool = False) -
         return f"{sys.version.split()[0]}; executable={sys.executable}"
 
     check("python", python_check)
-    dependencies = DEPENDENCIES | (JAX_DEPENDENCIES if with_jax else {})
-    for distribution, (module, expected) in dependencies.items():
+    for distribution, (module, expected) in DEPENDENCIES.items():
         def dependency_check(distribution=distribution, module=module, expected=expected):
             version = importlib.metadata.version(distribution)
             if expected and version != expected:
@@ -182,10 +165,6 @@ def run_checks(root: Path, require_data: bool = False, with_jax: bool = False) -
     check("Hugging Face executable", hf_cli_check)
     check("Colab execution API compatibility", check_cli_kernel_api)
     check("notebook kernel", kernel_check)
-    if with_jax:
-        check("pretrained assets", lambda: check_model(root))
-    else:
-        checks.append({"name": "pretrained assets", "status": "skipped", "detail": "The HF basic workshop downloads its model with hf download in notebook 00. Existing JAX assets are checked only with --with-jax."})
     if require_data:
         check("prepared data", lambda: check_data(root))
     else:
@@ -202,7 +181,6 @@ def run_checks(root: Path, require_data: bool = False, with_jax: bool = False) -
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="Print machine-readable results")
-    parser.add_argument("--with-jax", action="store_true", help="Also check optional JAX libraries and existing JAX pretrained assets")
     data_mode = parser.add_mutually_exclusive_group()
     data_mode.add_argument("--data", action="store_true", help="Also require and verify data prepared by notebook 00")
     data_mode.add_argument("--skip-data", action="store_true", help=argparse.SUPPRESS)
@@ -215,10 +193,10 @@ def main() -> int:
             result = {"status": "error", "detail": str(error)}
         checks = [{"name": "credential persistence", **result}]
     else:
-        checks = run_checks(ROOT, require_data=args.data, with_jax=args.with_jax)
+        checks = run_checks(ROOT, require_data=args.data)
     ok = not any(check["status"] == "error" for check in checks)
     report = {"ok": ok, "root": str(ROOT), "checks": checks,
-              "scope": "Offline local checks only; Google authentication, Colab allocation and GPU/TPU execution were not tested."}
+              "scope": "Offline local checks only; Google authentication, Colab allocation and GPU execution were not tested. Notebook 00 downloads and checks the model files."}
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:

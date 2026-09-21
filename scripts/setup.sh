@@ -4,16 +4,13 @@ set -euo pipefail
 LAB_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$LAB_ROOT"
 SKIP_STATE_LINK=0
-WITH_JAX=0
 for arg in "$@"; do
   case "$arg" in
     --skip-data) ;; # 이전 안내와의 호환용입니다. 데이터는 이제 00번 노트북에서 준비합니다.
     --skip-state-link) SKIP_STATE_LINK=1 ;;
-    --with-jax) WITH_JAX=1 ;;
     -h|--help)
-      printf '%s\n' 'Usage: bash scripts/setup.sh [--skip-state-link] [--with-jax]' \
-        '기본: Hugging Face CLI와 Colab CLI, 모델·데이터 준비 라이브러리를 설치합니다.' \
-        '--with-jax: 같은 가상환경에 선택 심화용 JAX 라이브러리도 설치합니다.' \
+      printf '%s\n' 'Usage: bash scripts/setup.sh [--skip-state-link]' \
+        'Hugging Face CLI와 Colab CLI, CPU에서 모델·데이터를 준비할 라이브러리를 설치합니다.' \
         '데이터는 00번 노트북에서 직접 준비합니다. 로그인하거나 Colab 자원을 생성하지 않습니다.'
       exit 0 ;;
     *) printf 'Unknown option: %s\n' "$arg" >&2; exit 2 ;;
@@ -31,22 +28,15 @@ export OMP_NUM_THREADS="${OMP_NUM_THREADS:-2}"
 export OPENBLAS_NUM_THREADS="${OPENBLAS_NUM_THREADS:-2}"
 export MKL_NUM_THREADS="${MKL_NUM_THREADS:-2}"
 uv venv --python 3.12 --allow-existing .venv
-REQUIREMENTS_FILE=requirements/codespaces.txt
-DOCTOR_ARGS=()
-if [[ "$WITH_JAX" -eq 1 ]]; then
-  REQUIREMENTS_FILE=requirements/codespaces-jax.txt
-  DOCTOR_ARGS+=(--with-jax)
-fi
-uv pip install --python .venv/bin/python -r "$REQUIREMENTS_FILE"
+uv pip install --python .venv/bin/python -r requirements/codespaces.txt
 .venv/bin/python -m ipykernel install --prefix "$LAB_ROOT/.venv" \
   --name codespaces-vision-ai --display-name 'Vision AI (Codespaces CPU)'
 
 if [[ "$SKIP_STATE_LINK" -eq 0 ]]; then
   .venv/bin/python scripts/doctor.py --configure-state-only
 fi
-.venv/bin/python scripts/doctor.py "${DOCTOR_ARGS[@]}"
+.venv/bin/python scripts/doctor.py
 printf '\n%s\n' '준비 완료: 노트북 커널로 Vision AI (Codespaces CPU)를 선택하세요.' \
   '기본 실습은 hf_colab_gpu/README.md와 hf_colab_gpu/notebooks/00_hf_download_and_data.ipynb에서 시작하세요.' \
   '추론·파인튜닝은 Colab GPU에서 Transformers와 PyTorch로 실행합니다.' \
-  'JAX·TPU 심화는 bash scripts/setup.sh --with-jax로 라이브러리를 추가한 뒤 진행하세요.' \
   '이 설치 과정에서는 Google 로그인이나 Colab 자원 생성이 일어나지 않습니다.'

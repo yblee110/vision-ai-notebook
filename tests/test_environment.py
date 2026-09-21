@@ -1,7 +1,9 @@
-"""Guard persistence, asset-integrity and manifest checks without cloud access."""
+"""Guard credential persistence, CPU setup and manifest checks without cloud access."""
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -64,8 +66,8 @@ def test_split_hash_detects_corruption(tmp_path):
         doctor.check_data(tmp_path)
 
 
-def test_manifest_paths_cannot_escape_assets(tmp_path):
-    directory = tmp_path / "assets"
+def test_manifest_paths_cannot_escape_data_directory(tmp_path):
+    directory = tmp_path / "prepared"
     directory.mkdir()
     (tmp_path / "secret").write_text("secret")
     with pytest.raises(ValueError, match="escapes"):
@@ -97,25 +99,16 @@ def test_notebook_prepares_data_after_environment_setup(tmp_path, monkeypatch, r
 
 def test_basic_environment_does_not_require_jax_or_downloaded_model(tmp_path, monkeypatch):
     """기본 환경은 JAX 설치나 모델 다운로드 없이 점검할 수 있습니다."""
+    assert not {"jax", "optax", "torch", "transformers"} & doctor.DEPENDENCIES.keys()
     monkeypatch.setattr(doctor, "DEPENDENCIES", {})
-    monkeypatch.setattr(doctor, "JAX_DEPENDENCIES", {"missing-jax": ("missing_jax", "1")})
     monkeypatch.setattr(doctor.shutil, "which", lambda _: None)
-
-    def unexpected_model_check(_):
-        raise AssertionError("Basic setup must not inspect JAX assets")
-
-    monkeypatch.setattr(doctor, "check_model", unexpected_model_check)
     checks = doctor.run_checks(tmp_path)
-    assert not any(check["name"] == "missing-jax" for check in checks)
-    assets = next(check for check in checks if check["name"] == "pretrained assets")
-    assert assets["status"] == "skipped"
+    assert not any(check["name"] == "pretrained assets" for check in checks)
 
 
-def test_optional_jax_environment_requires_library_and_model(tmp_path, monkeypatch):
-    monkeypatch.setattr(doctor, "DEPENDENCIES", {})
-    monkeypatch.setattr(doctor, "JAX_DEPENDENCIES", {"not-installed-workshop-jax": ("missing_jax", "1")})
-    monkeypatch.setattr(doctor.shutil, "which", lambda _: None)
-    checks = {check["name"]: check for check in doctor.run_checks(tmp_path, with_jax=True)}
-    assert checks["not-installed-workshop-jax"]["status"] == "error"
-    assert checks["pretrained assets"]["status"] == "error"
-    assert "FileNotFoundError" in checks["pretrained assets"]["detail"]
+@pytest.mark.parametrize("command", [["bash", "scripts/setup.sh"], [sys.executable, "scripts/doctor.py"]])
+def test_removed_jax_option_is_rejected_before_setup(command):
+    result = subprocess.run(command + ["--with-jax"], cwd=doctor.ROOT,
+                            text=True, capture_output=True, timeout=10)
+    assert result.returncode == 2
+    assert "--with-jax" in result.stderr

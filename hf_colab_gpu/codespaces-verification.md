@@ -1,6 +1,6 @@
 # GitHub Codespaces 실제 실행 검증
 
-검증일: 2026-09-19. 새 비공개 저장소에서 GitHub Codespace를 생성해 **자동 환경 설치, HF 모델·데이터 준비, 브라우저 노트북 실행**을 확인했습니다. 학생용 코드와 컨테이너 설정을 바꾸지 않고 진행했습니다.
+검증일: 2026-09-19. 새 비공개 저장소에서 GitHub Codespace를 생성해 **자동 환경 설치, HF 모델·데이터 준비, 브라우저 노트북 실행**을 확인했습니다. 당시 학생용 코드와 컨테이너 설정을 바꾸지 않고 진행했습니다. 이 문서는 2026-09-19 환경의 기록이며, 이후 추가한 AI 코딩 빈칸이나 이번 저장소 정리 후 새 Codespace를 실행한 기록은 아닙니다.
 
 ## 검증 환경
 
@@ -11,7 +11,7 @@
 | Python | 3.12.11, 프로젝트 `.venv` |
 | 노트북 커널 | Vision AI (Codespaces CPU) |
 | Hugging Face CLI / Colab CLI | 0.36.0 / 0.6.0 |
-| 학습 라이브러리 | Codespaces에는 JAX·PyTorch 미설치, 기본 과정의 GPU 연산은 Colab에서 수행 |
+| 학습 라이브러리 | Codespaces에는 PyTorch 미설치, GPU 연산은 Colab에서 수행 |
 
 처음 업로드한 123개 파일의 Git blob이 배포 ZIP과 일치하는지 확인했습니다. 검증용 실행기 1개는 따로 추가했습니다. 컨테이너의 자동 설정이 끝난 뒤 검사했으며, 검증 과정에서 `setup.sh`를 수동으로 다시 실행하지 않았습니다.
 
@@ -22,7 +22,7 @@
 | 자동 환경 설치와 실행 전 환경 검사 | 통과 |
 | 모델·데이터 캐시가 없는 첫 00번 실행 | 코드 셀 17개 실행, 오류 0개, 이미지 출력 1개 |
 | 기존 캐시가 있는 상태의 전체 검증 | 환경 검사 → 00번 → 준비 후 검사 → 자동 테스트 통과 |
-| 자동 테스트 | 17개 통과, 선택 심화 JAX 테스트 1개 건너뜀 |
+| 당시 구성의 자동 테스트 | 17개 통과, 선택 모듈 테스트 1개 건너뜀 |
 | VS Code 브라우저에서 커널 선택 후 Run All | 코드 셀 17개 실행, 오류 0개 |
 | 브라우저에서 실행한 코드와 배포 코드 비교 | 일치 |
 
@@ -46,6 +46,7 @@
 
 - [전체 검증 보고서](validation/codespaces/report.json)
 - [설치된 환경과 버전](validation/codespaces/environment.json)
-- [실행 결과가 포함된 00번 노트북](validation/codespaces/00_hf_download_and_data.ipynb)
 - [브라우저 Run All 검증](validation/codespaces/verification.json)
 - [Codespace 종료 기록](validation/codespaces/cleanup.json)
+
+실행본 노트북 사본은 저장소에서 제외했습니다. 위 보고서는 당시 실행 결과를 보존한 근거이며, 학생이 실행할 파일은 `notebooks`의 00·01·02번 세 개입니다.

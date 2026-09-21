@@ -1,20 +1,19 @@
 # HF CLI·Transformers·PyTorch 기본 과정 검증
 
-검증일: 2026-09-19. 이번 문서는 새 HF 기본 과정의 기록입니다. 이전 JAX 실험의 79% → 82% 수치를 이번 PyTorch 실행 결과로 옮기지 않습니다.
+검증일: 2026-09-19. 아래는 **빈칸 실습으로 바꾸기 전 완성된 코드**의 실행 기록입니다. 현재 학생이 네 개의 실습 셀을 채운 코드나 이번 저장소 정리 후 새 GPU 실행을 검증한 기록은 아닙니다. AI 코딩 실습으로 바꾼 뒤의 검사 범위는 [AI 코딩 실습 안내](ai-coding-workshop.md#이번-변경의-확인-범위)에 따로 정리했습니다.
 
 ## 모델 다운로드와 기본 환경
 
 00번 노트북을 실제로 실행해 `hf download`로 원본 모델의 `config.json`, `preprocessor_config.json`, `pytorch_model.bin`을 받았습니다. 고정 revision은 `b3428f18dcc7b543470d07f14b4a4157815d1880`이며 세 파일의 SHA-256을 검증했습니다. 데이터 분할은 학습 500장·검증 100장·테스트 200장입니다.
 
-- [실행한 준비 노트북](validation/00_hf_download_and_data.ipynb)
 - [실제 CLI 준비 검사](validation/preparation.json)
 - [독립 환경 검사](validation/environment.json)
 
-새 Python 3.12 가상환경에 기본 `requirements/codespaces.txt`만 설치했습니다. JAX·Optax·PyTorch·Transformers·Safetensors가 설치되지 않은 상태에서 HF/Colab CLI와 준비 노트북의 import가 정상 동작했습니다. 기본 과정의 학습 라이브러리는 Colab에 설치합니다.
+새 Python 3.12 가상환경에 기본 `requirements/codespaces.txt`만 설치했습니다. PyTorch·Transformers·Safetensors 등 GPU 학습 라이브러리가 설치되지 않은 상태에서 HF/Colab CLI와 준비 노트북의 import가 정상 동작했습니다. 기본 과정의 학습 라이브러리는 Colab에 설치합니다.
 
 ## GPU 실행 검증
 
-실제 Colab **Tesla T4**에서 배포할 01번·02번 노트북의 코드 셀을 그대로 실행했습니다. 추론 7개 코드 셀과 학습 15개 코드 셀에 오류가 없었습니다. PyTorch `2.8.0+cu126`, Transformers `4.57.6`, Hugging Face Hub `0.36.0`을 사용했습니다.
+실제 Colab **Tesla T4**에서 당시 완성된 01번·02번 노트북의 코드 셀을 그대로 실행했습니다. 추론 7개 코드 셀과 학습 15개 코드 셀에 오류가 없었습니다. PyTorch `2.8.0+cu126`, Transformers `4.57.6`, Hugging Face Hub `0.36.0`을 사용했습니다.
 
 | 모델 | 선택한 epoch | 검증 정확도 | 테스트 정확도 · 200장 | 테스트 Macro F1 |
 |---|---:|---:|---:|---:|
@@ -45,7 +44,7 @@
 
 근거: [추론 보고서](validation/gpu/inference_report.json), [학습 보고서](validation/gpu/report.json), [노트북·파일 검증](validation/gpu/verification.json), [세션 종료](validation/gpu/cleanup.json).
 
-실행 결과가 포함된 노트북: [GPU 추론](validation/gpu/01_gpu_inference.ipynb), [GPU 파인튜닝](validation/gpu/02_gpu_finetuning.ipynb). 이미지 갤러리·Top-5·학습 곡선·혼동행렬도 직접 확인했습니다.
+추가 근거: [원본 모델 Top-5 그림](validation/gpu/pretrained_top5.png), [epoch별 학습 기록](validation/gpu/training.csv), [테스트 이미지별 예측](validation/gpu/predictions.csv). 저장소에는 실습 파일과 혼동하지 않도록 실행본 노트북 사본을 두지 않습니다. 위 JSON·CSV·그림은 당시 결과를 보존한 참고 자료입니다.
 
 ## 발견해서 고친 문제
 
@@ -54,10 +53,10 @@
 
 ## 검증 범위
 
-기본 라이브러리만 설치한 새 환경에서 자동 테스트 17개가 통과했고 JAX 심화 모듈 1개는 의도대로 건너뛰었습니다. JAX가 있는 환경에서는 전체 19개가 통과했습니다. 기본 과정의 모델 계산에는 JAX import나 직접 구현한 Attention 함수가 없습니다.
+2026-09-19 당시 기본 라이브러리만 설치한 새 환경에서 자동 테스트 17개가 통과했고, 선택 모듈 1개는 건너뛰었습니다. 이 개수는 과거 검사 구성의 기록이며 현재 저장소의 테스트 개수를 뜻하지 않습니다. 이번 실습의 모델 계산에는 공개 Transformers·PyTorch 라이브러리를 사용합니다.
 
-2026-09-19에 실제 GitHub Codespace를 새로 생성해 자동 환경 설치와 00번 노트북 실행을 확인했습니다. 모델·데이터 캐시가 없는 첫 실행에서 코드 셀 17개가 모두 실행됐고 오류는 없었습니다. 다만 검증기의 출력 해석 오류로 첫 보고서 작성은 실패했습니다. 검증기만 수정한 뒤 기존 캐시가 있는 상태에서 환경 검사·노트북·자동 테스트 전체가 통과했습니다(17개 통과, JAX 심화 1개 건너뜀). 브라우저의 커널 선택과 Run All도 별도로 확인했습니다. 자세한 조건과 한계는 [Codespaces 검증 기록](codespaces-verification.md)에 정리했습니다.
+2026-09-19에 실제 GitHub Codespace를 새로 생성해 자동 환경 설치와 00번 노트북 실행을 확인했습니다. 모델·데이터 캐시가 없는 첫 실행에서 코드 셀 17개가 모두 실행됐고 오류는 없었습니다. 다만 검증기의 출력 해석 오류로 첫 보고서 작성은 실패했습니다. 검증기만 수정한 뒤 기존 캐시가 있는 상태에서 환경 검사·노트북·자동 테스트 전체가 통과했습니다(당시 구성의 테스트 17개 통과, 선택 모듈 1개 건너뜀). 브라우저의 커널 선택과 Run All도 별도로 확인했습니다. 자세한 조건과 한계는 [Codespaces 검증 기록](codespaces-verification.md)에 정리했습니다.
 
 이번 Codespaces 검사에서는 Google 첫 OAuth2 로그인이나 Colab GPU 실행을 다시 수행하지 않았습니다. 위 T4 실측은 로컬 환경에서 CLI와 기존 ADC 인증을 사용한 별도 검증입니다. 학생 계정의 첫 OAuth2 로그인·CU·T4 가용량은 수업 전에 별도로 확인해야 합니다.
 
-공개 CIFAR 이미지의 결과는 실제 작업대 사진 성능을 의미하지 않습니다. JAX와 PyTorch의 전처리·초기화·배치 순서·모델 선택 기준이 다를 수 있어 두 과정의 정확도만으로 프레임워크 우열을 판단하지 않습니다.
+공개 CIFAR 이미지의 결과는 실제 작업대 사진 성능을 의미하지 않습니다. 학생이 작성한 함수나 학습 설정에 따라 결과가 달라질 수 있으므로 본인의 출력과 오류 여부를 따로 확인합니다.

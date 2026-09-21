@@ -204,7 +204,7 @@ def training_cells():
 
     **목표:** Transformers가 불러온 모델의 분류 헤드를 학습한 뒤, 마지막 Transformer 블록도 조금 수정해 성능을 비교합니다.
     PyTorch의 `DataLoader`, `CrossEntropyLoss`, `Adam`과 학습 반복문을 직접 읽습니다.
-    JAX 모델 내부 구현과 TPU 비교는 기존 심화 노트북에서 이어갑니다.
+    모델 구조는 Transformers로 불러오고 학습 코드는 PyTorch로 작성합니다.
 
     GPU 사용 여부, 검증 데이터로 선택한 모델, 고정한 가중치의 변화, 저장한 모델의 재로딩까지 확인합니다.
     정확도 상승은 보장하지 않습니다. 데이터와 실행 환경에 따라 달라지는 실제 결과를 기록하세요.
@@ -501,7 +501,7 @@ def training_cells():
 
     결과 표와 오분류 이미지를 보고 데이터 수·촬영 조건·학습 범위를 어떻게 바꿀지 정해 보세요.
     저장된 `finetuned_model` 폴더는 `AutoImageProcessor`와 `AutoModelForImageClassification`로 바로 다시 읽을 수 있습니다.
-    JAX·TPU에 관심이 있다면 상위 폴더의 기존 심화 노트북에서 같은 과제를 다른 실행 환경과 비교해 보세요.
+    [AI 코딩 실습 안내](../ai-coding-workshop.md)에 따라 바꿔 본 조건과 실행 결과를 정리해 보세요.
     """)]
     settings_seen = False
     for cell in cells:
@@ -521,12 +521,18 @@ def training_cells():
 
 
 def build():
-    notebooks = {"01_gpu_inference.ipynb": inference_cells(), "02_gpu_finetuning.ipynb": training_cells()}
+    from inference_exercises import adapt_inference
+    from finetuning_exercises import adapt_training
+
+    notebooks = {"01_gpu_inference.ipynb": adapt_inference(inference_cells()),
+                 "02_gpu_finetuning.ipynb": adapt_training(training_cells())}
     for name, cells in notebooks.items():
         notebook = nbf.v4.new_notebook(cells=cells, metadata={
             "kernelspec": {"display_name": "Python 3 (Colab GPU)", "language": "python", "name": "python3"},
             "language_info": {"name": "python", "version": "3.12"},
             "colab": {"name": name}, "accelerator": "GPU",
+            "workshop": {"mode": "ai-coding", "student_task_count": 2,
+                         "requires_completed_student_cells": True},
         })
         nbf.validate(notebook)
         destination = HERE / "notebooks" / name

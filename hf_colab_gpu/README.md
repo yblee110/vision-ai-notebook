@@ -1,6 +1,6 @@
 # Hugging Face CLI + Colab GPU 기본 실습
 
-**모델을 받아서 추론하고, 우리 물체에 맞게 추가 학습합니다.** 모델 구조는 Hugging Face Transformers로 불러오고, PyTorch로 GPU 연산을 합니다. JAX·TPU는 기본 실습 뒤의 선택 심화 과정입니다.
+**모델을 받아서 추론하고, 우리 물체에 맞게 추가 학습합니다.** 모델 구조는 Hugging Face Transformers로 불러오고, PyTorch로 GPU 연산을 합니다. 실습 파일은 이 폴더 안의 00·01·02번 노트북 세 개입니다.
 
 모든 명령은 `.vision-lab-root`가 있는 **프로젝트 최상위 폴더의 Codespaces 터미널**에서 실행합니다. `hf_colab_gpu` 안으로 이동하지 않습니다. 기본 설정은 Google에 로그인하거나 GPU를 할당하지 않습니다.
 
@@ -36,6 +36,16 @@ hf download facebook/deit-tiny-patch16-224 config.json preprocessor_config.json 
 `hf download`는 모델 파일을 받는 명령입니다. 그 파일의 가중치를 Python 모델로 읽는 단계는 GPU 노트북의 `from_pretrained(...)`가 담당합니다. [고정 버전 CLI 문서](https://github.com/huggingface/huggingface_hub/blob/v0.36.0/docs/source/en/guides/cli.md)
 
 준비가 끝나면 `hf_colab_gpu/models/deit-tiny`에 모델 3개 파일과 `download_manifest.json`, `data/prepared`에 데이터 3개 NPZ와 `manifest.json`이 생깁니다.
+
+## GPU 생성 전 · AI 코딩 실습 준비
+
+01번과 02번에는 **각각 두 개의 빈 코드 셀**이 있습니다. 문제 조건과 프롬프트 예시를 읽고 AI와 코드를 작성한 뒤, 입력 노트북을 저장합니다. [네 가지 문제와 진행 방법](ai-coding-workshop.md)을 먼저 확인하세요. 별도 강사용 파일 없이 같은 노트북에서 시도·확인·결과 해석을 이어갑니다.
+
+```bash
+python scripts/check_student_cells.py
+```
+
+빈 셀·문법 오류·필수 함수 누락이 없는지 GPU 할당 전에 확인합니다. 이 사전 검사는 계산의 정답을 보장하지 않습니다. 실제 실행 뒤 노트북의 확인 셀과 출력 결과도 읽습니다. `colab exec -f`는 문제 앞에서 자동으로 멈추지 않으므로 네 셀을 채운 다음 GPU 실행으로 넘어갑니다.
 
 ## 2. Google 로그인과 GPU 세션 생성
 
@@ -110,7 +120,7 @@ colab upload -s hf-vision-gpu data/prepared/test.npz content/vision-ai/data/prep
 
 ## 5. GPU 추론 → 파인튜닝
 
-먼저 [01_gpu_inference.ipynb](notebooks/01_gpu_inference.ipynb)를 열어 `AutoImageProcessor`, `AutoModelForImageClassification`, `torch.inference_mode`가 하는 일을 읽습니다. 실행은 다음 CLI로 진행합니다.
+먼저 [01_gpu_inference.ipynb](notebooks/01_gpu_inference.ipynb)의 두 실습 함수 작성과 사전 검사를 마쳤는지 확인합니다. `AutoImageProcessor`, `AutoModelForImageClassification`, `torch.inference_mode`가 하는 일을 읽고 다음 CLI로 실행합니다.
 
 ```bash
 colab exec -s hf-vision-gpu -f hf_colab_gpu/notebooks/01_gpu_inference.ipynb --timeout 1800
@@ -152,12 +162,13 @@ colab sessions
 
 Colab 종료 뒤 결과 폴더와 출력 노트북을 학생 PC로 내려받고 Codespaces도 중지합니다.
 
-## 수업 자료와 심화
+## 수업 자료
 
+- [AI 코딩 네 가지 문제와 진행 방법](ai-coding-workshop.md)
 - [학생 교안](handson.md)
 - [실제 검증 결과](test-results.md)
 - [새 GitHub Codespaces 생성·실행 검증 기록](codespaces-verification.md)
 - [검증 결과를 포함한 최종 교안](final-guide.md)
-- [JAX·TPU 선택 심화 안내](../docs/jax-advanced.md)
+- [양자화 선택 읽을거리](quantization-reference.md)
 
-기존 JAX 실험 수치를 새 PyTorch 결과로 재사용하지 않습니다. 이번 실행 결과는 별도 검증 문서에 기록합니다.
+`validation`의 JSON·CSV·PNG는 과거 실행을 확인하는 참고 기록입니다. 실습은 `notebooks`의 세 파일로 진행하고, 직접 실행한 결과는 `results`와 출력 노트북에서 확인합니다.
