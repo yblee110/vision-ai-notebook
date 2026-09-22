@@ -35,12 +35,6 @@ def test_completed_training_report_blocks_every_following_cell(tmp_path):
 
     # Match the CLI behavior: attempt every later cell despite the first error.
     for cell in cells[settings_index + 1:]:
-        if "student-task" in cell.metadata.get("tags", []):
-            assert cell.source == "", "Student task cells must remain genuinely empty."
-            before = namespace.copy()
-            exec(cell.source, namespace)
-            assert namespace == before
-            continue
         with pytest.raises(RuntimeError, match="학습 준비가 완료되지"):
             exec(cell.source, namespace)
     observed = {

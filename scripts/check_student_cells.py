@@ -1,4 +1,4 @@
-"""Check student function cells without importing Torch or executing any cell."""
+"""Check required function cells without importing Torch or executing any cell."""
 import argparse
 import ast
 import json
@@ -27,7 +27,7 @@ def check_notebook(path):
         source = cell.get('source', '')
         source = source if isinstance(source, str) else ''.join(source)
         metadata = cell.get('metadata', {})
-        is_task = 'student-task' in metadata.get('tags', [])
+        is_task = bool({'provided-function', 'student-task'} & set(metadata.get('tags', [])))
         label = f'{path.name} · {number}번째 셀'
         try:
             tree = ast.parse(source)
@@ -39,19 +39,19 @@ def check_notebook(path):
         identifier = metadata.get('exercise_id')
         function = expected.get(identifier)
         if function is None or identifier in found or metadata.get('expected_function') != function:
-            issues.append(f'{label}: 실습 셀의 이름·메타데이터를 확인하세요.')
+            issues.append(f'{label}: 함수 셀의 이름·메타데이터를 확인하세요.')
             continue
         found[identifier] = True
         definitions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == function]
         if not definitions:
-            issues.append(f'{label}: {function} 함수가 아직 없습니다. 빈 셀에 코드를 작성하고 저장하세요.')
+            issues.append(f'{label}: {function} 함수가 아직 없습니다. 함수 정의를 확인하고 저장하세요.')
         elif not any(not isinstance(n, (ast.Pass, ast.Expr)) or
                      (isinstance(n, ast.Expr) and not isinstance(n.value, ast.Constant))
                      for n in definitions[0].body):
-            issues.append(f'{label}: {function} 함수가 pass·설명만 있습니다. 본문을 작성하세요.')
+            issues.append(f'{label}: {function} 함수가 pass·설명만 있습니다. 함수 본문을 확인하세요.')
     missing = set(expected) - set(found)
     if missing:
-        issues.append(f'{path.name}: 실습 셀 누락 또는 문법 오류: {", ".join(sorted(missing))}')
+        issues.append(f'{path.name}: 함수 셀 누락 또는 문법 오류: {", ".join(sorted(missing))}')
     return issues
 
 
@@ -67,7 +67,7 @@ def main():
             print('- ' + issue)
         return 1
     print(f'사전 검사 통과: 노트북 {len(paths)}개. 문법과 함수 정의를 확인했습니다.')
-    print('코드의 정답이나 GPU 동작을 보장하는 검사는 아닙니다. 실행 후 각 확인 셀과 출력의 오류를 확인하세요.')
+    print('계산 결과나 GPU 동작을 보장하는 검사는 아닙니다. 실행 후 각 확인 셀과 출력의 오류를 확인하세요.')
     return 0
 
 

@@ -1,4 +1,4 @@
-"""Turn the inference notebook into two guided, answer-free AI coding exercises."""
+"""Add two complete, inspectable functions to the GPU inference walkthrough."""
 from copy import deepcopy
 from textwrap import dedent
 
@@ -24,15 +24,15 @@ def _code(text, *, exercise_id=None):
     return nbf.v4.new_code_cell(source, metadata=metadata)
 
 
-def _task(exercise_id, expected_function):
-    return nbf.v4.new_code_cell("", metadata={
-        "tags": ["student-task"], "exercise_id": exercise_id,
+def _provided_function(exercise_id, expected_function, source):
+    return nbf.v4.new_code_cell(dedent(source).strip(), metadata={
+        "tags": ["provided-function"], "exercise_id": exercise_id,
         "expected_function": expected_function,
     })
 
 
 def pipeline_example_cells():
-    """Provided demonstration before the two student tasks; reuse loaded objects."""
+    """Provided demonstration before the two function walkthroughs; reuse loaded objects."""
     cells = [_md("""
         ## 3-1. 먼저 `pipeline()`으로 추론해 보기
 
@@ -70,8 +70,8 @@ def pipeline_example_cells():
         커밋을 지정합니다. 처음 실행할 때 모델을 내려받고 이후에는 캐시를 활용합니다.
         [셸 시연 안내](../pipeline-guide.md)를 따르면 같은 코드를 Colab GPU에서 한 명령으로 실행할 수 있습니다.
 
-        다음 두 빈칸 실습에서는 `pipeline()` 안에서 처리하던 과정을 나눠 직접 만들어 봅니다.
-        방금 실행한 완성 예제와 빈칸 확인 결과는 따로 관리하므로, 두 함수를 작성해야 확인 셀을 통과합니다.
+        다음 두 실습에서는 `pipeline()` 안에서 처리하던 과정을 나눠 살펴봅니다.
+        완성된 두 함수를 차례로 실행한 뒤 확인 셀에서 동작을 점검합니다.
     """)]
     for index, cell in enumerate(cells):
         cell["id"] = f"pipeline-demo-{index + 1}"
@@ -97,13 +97,12 @@ def adapt_inference(cells):
         cell["source"] = _source(cell)
     original[0]["source"] += dedent("""
 
-        **실습 방법:** 아래 빈 코드 셀 두 곳에 AI와 함께 만든 함수를 넣습니다.
-        각 문제의 입력과 조건을 읽고, 제시한 프롬프트를 자신의 말로 바꿔 요청해 보세요.
-        코드를 넣은 뒤 바로 아래 확인 셀을 실행합니다. 오류가 나면 오류 메시지와 문제 조건을
-        AI에게 함께 보여 주고 수정합니다. 조건을 바꿔 다시 시도한 뒤 같은 노트북에서 결과와 해설을 확인합니다.
-        처음에는 위에서부터 실행하고, 입력을 바꿀 때는 해당 준비 셀부터 결과 저장 셀까지 다시 실행하세요.
-        빈 셀을 채우지 않은 상태에서 전체 실행하면 확인 셀에서 멈추는 것이 정상입니다.
-        정답 코드가 있는 별도 노트북은 없습니다. 제시된 수치 예시는 연습용이며 실제 GPU 결과와 다를 수 있습니다.
+        **실습 방법:** 핵심 함수 두 개가 완성된 코드로 들어 있습니다.
+        입력과 함수 동작을 읽고 위에서부터 실행한 뒤, 바로 아래 확인 셀에서 결과를 점검합니다.
+        제시한 프롬프트는 코드 설명을 듣거나 조건을 바꿔 볼 때 선택해서 사용하세요.
+        입력을 바꿀 때는 해당 준비 셀부터 결과 저장 셀까지 다시 실행합니다.
+        같은 노트북의 결과와 접힌 해설을 비교하며 어떤 값이 달라졌는지 살펴보세요.
+        제시된 수치 예시는 연습용이며 실제 GPU 결과와 다를 수 있습니다.
     """)
     reset = _code('''
         INFERENCE_CHECKS = {"01-infer": False, "01-topk": False}
@@ -112,14 +111,14 @@ def adapt_inference(cells):
     ''')
     guard = '''if not all(globals().get("INFERENCE_CHECKS", {}).get(key, False)
            for key in ("01-infer", "01-topk")):
-    raise RuntimeError("두 문제의 확인 셀을 모두 통과한 뒤 결과를 확인하세요.")
+    raise RuntimeError("두 함수의 확인 셀을 모두 통과한 뒤 결과를 확인하세요.")
 '''
     original[10]["source"] = guard + original[10]["source"]
     original[12]["source"] = guard + original[12]["source"]
     result = [original[0], reset, *original[1:8], *pipeline_example_cells(), _md("""
         ## 4. 실습 1 — 이미지에서 확률 구하기
 
-        모델에 사진 한 장을 넣고, 1,000개 분류 각각의 확률을 받는 함수 하나를 만듭니다.
+        모델에 사진 한 장을 넣고, 1,000개 분류 각각의 확률을 받는 함수를 살펴봅니다.
         모델과 전처리 도구는 이미 준비되어 있습니다. 설치하거나 새 모델을 내려받을 필요가 없습니다.
 
         **제공 입력**
@@ -129,24 +128,23 @@ def adapt_inference(cells):
         - `image`: RGB 형식의 PIL 이미지 한 장
         - `device`: 이번 세션의 GPU 장치
 
-        **완성 조건**
+        **함수의 동작**
 
-        1. 함수 이름과 인자는 `infer_probabilities(model, processor, image, device)`로 정합니다.
+        1. 함수 이름과 인자는 `infer_probabilities(model, processor, image, device)`입니다.
         2. `processor`로 이미지를 PyTorch 텐서로 바꾸고, 모든 입력 텐서를 `device`로 옮깁니다.
         3. `model.eval()`과 `torch.inference_mode()`를 사용합니다. 모델 가중치를 바꾸거나 학습하지 않습니다.
         4. 모델의 `logits`에 마지막 축 기준 `softmax`를 적용합니다.
-           이미지 한 장의 결과만 꺼내 **1차원 PyTorch 텐서**로 반환합니다. 출력만 하는 함수는 통과하지 못합니다.
+           이미지 한 장의 결과만 꺼내 **1차원 PyTorch 텐서**로 반환합니다. 반환된 텐서는 다음 실습에서도 사용합니다.
 
         **예상 결과의 형태:** `torch.Size([1000])`, GPU 텐서, 확률 합계는 약 `1.0`,
         각 값은 `0` 이상 `1` 이하입니다. 이는 출력 조건이며 특정 정답 확률을 뜻하지 않습니다.
 
-        **AI에게 요청할 프롬프트**
+        **선택: AI에게 설명 요청하기**
 
-        > 저는 Python 초보자입니다. 위 입력과 완성 조건에 맞게
-        > `infer_probabilities(model, processor, image, device)` 함수만 작성해 주세요.
-        > 이미 준비된 객체를 사용하고 설치·다운로드·학습 코드는 넣지 마세요.
-        > 전처리, GPU 이동, 평가 모드, 추론 모드, softmax가 각각 필요한 이유를 짧게 설명해 주세요.
-        > 사진이 바뀌어도 작동해야 하며 숫자를 고정해서 반환하면 안 됩니다.
+        > 저는 Python 초보자입니다. 아래 `infer_probabilities` 함수가 입력 사진을 확률로 바꾸는 과정을 설명해 주세요.
+        > 전처리, GPU 이동, 평가 모드, 추론 모드, softmax가 각각 필요한 이유를 짧게 알려 주세요.
+        > 사진을 바꾸면 달라지는 값과 그대로인 값도 설명해 주세요.
+        > 설치·다운로드·학습 코드는 추가하지 마세요.
     """), _code('''
         # 먼저 그대로 실행하고, 성공한 뒤 다른 종류나 사진 번호를 선택해 보세요.
         SAMPLE_CLASS = "cup"
@@ -171,15 +169,26 @@ def adapt_inference(cells):
         print("사진의 실제 종류:", SAMPLE_CLASS, "· 같은 종류의 사진 번호:", SAMPLE_OFFSET)
         print("입력 형식:", image.mode, "· 원본 크기:", image.size)
     '''), _md("""
-        **아래 빈 코드 셀을 채우세요.** 함수만 넣고, 다음 확인 셀에서 실행 결과를 확인합니다.
-    """), _task("01-infer", "infer_probabilities"), _code('''
+        **아래 완성된 함수 셀을 실행하세요.** 다음 확인 셀에서 실제 출력 형태와 가중치 유지 여부를 확인합니다.
+    """), _provided_function("01-infer", "infer_probabilities", '''
+        def infer_probabilities(model, processor, image, device):
+            # 전처리한 입력을 모델과 같은 장치로 옮깁니다.
+            inputs = {
+                name: tensor.to(device)
+                for name, tensor in processor(images=image, return_tensors="pt").items()
+            }
+            model.eval()
+            with torch.inference_mode():
+                logits = model(**inputs).logits
+                return logits.softmax(dim=-1)[0]
+    '''), _code('''
         INFERENCE_CHECKS.update({"01-infer": False, "01-topk": False})
         globals().pop("probabilities", None)
         globals().pop("predictions", None)
         if not callable(globals().get("infer_probabilities")):
-            raise RuntimeError("실습 1의 빈 셀에 infer_probabilities 함수를 만들고 실행하세요.")
+            raise RuntimeError("앞의 infer_probabilities 함수 셀을 먼저 실행하세요.")
         weights_before = model_fingerprint(model)
-        model.train()  # 학생 함수가 평가 모드로 전환하는지도 확인합니다.
+        model.train()  # 제공된 함수가 평가 모드로 전환하는지도 확인합니다.
         forward_calls = []
         def record_forward(module, args, output):
             forward_calls.append((output.logits.detach().clone(), torch.is_grad_enabled(),
@@ -225,13 +234,13 @@ def adapt_inference(cells):
 
         숫자 1,000개에서 확률이 높은 항목을 골라 이름과 함께 정리합니다.
 
-        **제공 입력:** 앞 문제의 `probabilities`, 번호를 이름으로 바꾸는 `model.config.id2label`,
+        **제공 입력:** 앞 실습의 `probabilities`, 번호를 이름으로 바꾸는 `model.config.id2label`,
         보여 줄 항목 수 `k`입니다. 여기서는 **원래 모델의 ImageNet 1,000개 이름**을 사용합니다.
         실습 데이터의 `classes`는 5개 정답 종류이므로 예측 번호를 이 목록에 연결하면 안 됩니다.
 
-        **완성 조건**
+        **함수의 동작**
 
-        1. `topk_predictions(probabilities, id2label, k)` 함수를 만듭니다.
+        1. `topk_predictions(probabilities, id2label, k)`가 상위 예측을 정리합니다.
         2. 큰 확률부터 `k`개를 골라 `label`과 `probability`를 가진 딕셔너리 목록으로 반환합니다.
         3. `probability`는 0~1 범위의 Python `float`입니다. 퍼센트 문자열 변환은 화면에 출력할 때만 합니다.
         4. `k`가 `1`, `3`, `5`일 때 모두 작동하고 입력 확률 텐서와 이름 목록을 변경하지 않아야 합니다.
@@ -240,22 +249,27 @@ def adapt_inference(cells):
         `k=3`이면 `라벨 B 60% → 라벨 D 20% → 라벨 A 10%` 순서입니다.
         실제 사진의 이름·확률은 실행 결과로 확인하며 이 예시와 같을 필요가 없습니다.
 
-        **AI에게 요청할 프롬프트**
+        **선택: AI에게 설명 요청하기**
 
-        > 위 조건에 맞는 `topk_predictions(probabilities, id2label, k)` 함수를 작성해 주세요.
-        > `torch.topk`를 사용해 높은 확률부터 정렬하고, 모델의 `id2label`로 이름을 찾아 주세요.
-        > CPU와 GPU에서 모두 작동하고 원래 입력은 바꾸지 않아야 합니다.
-        > 정답 데이터의 5개 클래스 이름이나 예시 확률을 코드에 고정하지 마세요.
-        > 반환값의 자료형과, k를 바꾸면 무엇이 달라지는지도 설명해 주세요.
+        > 아래 `topk_predictions` 함수가 높은 확률부터 고르고 `id2label`로 이름을 찾는 과정을 설명해 주세요.
+        > 실제 데이터의 5개 정답 이름 대신 모델의 이름 목록을 사용하는 이유도 알려 주세요.
+        > 반환값의 자료형과 k를 바꾸면 무엇이 달라지는지 설명해 주세요.
 
-        **아래 빈 코드 셀을 채운 뒤 확인 셀을 실행하세요.**
-    """), _task("01-topk", "topk_predictions"), _code('''
+        **아래 완성된 함수 셀과 확인 셀을 차례로 실행하세요.**
+    """), _provided_function("01-topk", "topk_predictions", '''
+        def topk_predictions(probabilities, id2label, k):
+            values, indices = probabilities.topk(k)
+            return [
+                {"label": id2label[int(index)], "probability": float(value)}
+                for value, index in zip(values, indices)
+            ]
+    '''), _code('''
         INFERENCE_CHECKS["01-topk"] = False
         globals().pop("predictions", None)
         if not INFERENCE_CHECKS.get("01-infer", False):
             raise RuntimeError("먼저 실습 1의 확인 셀을 통과하세요.")
         if not callable(globals().get("topk_predictions")):
-            raise RuntimeError("실습 2의 빈 셀에 topk_predictions 함수를 만들고 실행하세요.")
+            raise RuntimeError("앞의 topk_predictions 함수 셀을 먼저 실행하세요.")
         example = torch.tensor([0.10, 0.60, 0.03, 0.20, 0.07])
         example_labels = dict(enumerate(["라벨 A", "라벨 B", "라벨 C", "라벨 D", "라벨 E"]))
         for source, names in ((example, example_labels), (probabilities, model.config.id2label.copy())):
@@ -284,7 +298,7 @@ def adapt_inference(cells):
         아래 그래프와 저장 파일은 비교 기준을 맞추기 위해 계속 상위 5개를 사용합니다.
     """), _code('''
         if not all(INFERENCE_CHECKS.values()):
-            raise RuntimeError("두 문제의 확인 셀을 먼저 통과하세요.")
+            raise RuntimeError("두 함수의 확인 셀을 먼저 통과하세요.")
         for k in (1, 3):
             print(f"\\n상위 {k}개를 보여 줄 때")
             for item in topk_predictions(probabilities, model.config.id2label.copy(), k):
@@ -300,7 +314,7 @@ def adapt_inference(cells):
 
         </details>
 
-        ## 6. 완성한 두 함수로 실제 결과 확인
+        ## 6. 두 함수로 실제 결과 확인
 
         선택한 사진과 상위 5개 예측을 함께 봅니다. 예상과 다르면 입력 사진, 예측 이름,
         두 번째·세 번째 후보를 차례로 살펴보세요. 작은 사진을 확대해 넣었다는 점도 생각해 봅니다.

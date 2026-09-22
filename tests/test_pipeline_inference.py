@@ -1,4 +1,5 @@
 """Exercise the pipeline entry point without model downloads or a GPU account."""
+import ast
 import hashlib
 import json
 from pathlib import Path
@@ -129,14 +130,22 @@ def test_missing_cuda_stops_before_model_loading(tmp_path, monkeypatch):
     assert not output.exists()
 
 
-def test_pipeline_demo_precedes_two_unanswered_tasks():
+def test_pipeline_demo_precedes_two_provided_functions():
     path = Path(__file__).resolve().parents[1] / "hf_colab_gpu/notebooks/01_gpu_inference.ipynb"
     notebook = nbformat.read(path, as_version=4)
     provided = [i for i, cell in enumerate(notebook.cells)
                 if cell.cell_type == "code" and "provided-pipeline-demo" in cell.metadata.get("tags", [])]
-    tasks = [i for i, cell in enumerate(notebook.cells) if "student-task" in cell.metadata.get("tags", [])]
-    assert len(provided) == 1 and len(tasks) == 2 and provided[0] < min(tasks)
-    assert all(notebook.cells[index].source == "" for index in tasks)
+    functions = [i for i, cell in enumerate(notebook.cells)
+                 if "provided-function" in cell.metadata.get("tags", [])]
+    assert len(provided) == 1 and len(functions) == 2 and provided[0] < min(functions)
+    assert [notebook.cells[index].metadata.expected_function for index in functions] == [
+        "infer_probabilities", "topk_predictions",
+    ]
+    for index in functions:
+        cell = notebook.cells[index]
+        assert cell.cell_type == "code" and cell.source.strip()
+        assert any(isinstance(node, ast.FunctionDef) and node.name == cell.metadata.expected_function
+                   for node in ast.parse(cell.source).body)
     source = notebook.cells[provided[0]].source
     assert "model=model, image_processor=processor" in source
     assert "pipeline_predictions" in source

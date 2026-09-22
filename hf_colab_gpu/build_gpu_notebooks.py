@@ -531,11 +531,18 @@ def build():
             "kernelspec": {"display_name": "Python 3 (Colab GPU)", "language": "python", "name": "python3"},
             "language_info": {"name": "python", "version": "3.12"},
             "colab": {"name": name}, "accelerator": "GPU",
-            "workshop": {"mode": "ai-coding", "student_task_count": 2,
-                         "requires_completed_student_cells": True},
+            "workshop": {"mode": "guided-code", "student_task_count": 0,
+                         "provided_function_count": 2, "requires_completed_student_cells": False},
         })
-        nbf.validate(notebook)
         destination = HERE / "notebooks" / name
+        if destination.exists():
+            previous = nbf.read(destination, as_version=4)
+            # Keep existing cell links stable when rebuilding the same walkthrough.
+            if len(previous.cells) == len(cells):
+                for old_cell, new_cell in zip(previous.cells, notebook.cells):
+                    if old_cell.cell_type == new_cell.cell_type:
+                        new_cell.id = old_cell.id
+        nbf.validate(notebook)
         destination.parent.mkdir(parents=True, exist_ok=True)
         nbf.write(notebook, destination)
         print(name, len(cells), "cells")

@@ -1,4 +1,4 @@
-"""Validate the student handout and fail-closed execution without task answers."""
+"""Validate completed function cells and fail-closed execution."""
 import ast
 from pathlib import Path
 from types import SimpleNamespace
@@ -21,7 +21,7 @@ def minimal_notebook(tmp_path, name):
     # These deliberately unimplemented definitions test syntax, never give answers.
     cells = [nbformat.v4.new_code_cell(
         f"def {function}(*args, **kwargs):\n    raise NotImplementedError",
-        metadata={"tags": ["student-task"], "exercise_id": identifier,
+        metadata={"tags": ["provided-function"], "exercise_id": identifier,
                   "expected_function": function},
     ) for identifier, function in EXPECTED[name].items()]
     path = tmp_path / name
@@ -30,11 +30,11 @@ def minimal_notebook(tmp_path, name):
 
 
 @pytest.mark.parametrize("name", EXPECTED)
-def test_handout_has_two_empty_tasks_and_valid_code(name):
+def test_notebook_has_two_implemented_functions_and_valid_code(name):
     notebook = read_notebook(name)
     nbformat.validate(notebook)
     tasks = [cell for cell in notebook.cells
-             if "student-task" in cell.metadata.get("tags", [])]
+             if "provided-function" in cell.metadata.get("tags", [])]
     assert len(tasks) == 2
     assert {cell.metadata.exercise_id: cell.metadata.expected_function
             for cell in tasks} == EXPECTED[name]
@@ -42,7 +42,13 @@ def test_handout_has_two_empty_tasks_and_valid_code(name):
         if cell.cell_type == "code":
             ast.parse(cell.source)
             assert cell.outputs == [] and cell.execution_count is None
-    assert all(cell.cell_type == "code" and cell.source == "" for cell in tasks)
+    assert not any("student-task" in cell.metadata.get("tags", []) for cell in notebook.cells)
+    assert all(cell.source.strip() for cell in notebook.cells if cell.cell_type == "code")
+    for cell in tasks:
+        tree = ast.parse(cell.source)
+        assert any(isinstance(node, ast.FunctionDef) and node.name == cell.metadata.expected_function
+                   for node in tree.body)
+    assert check_notebook(NOTEBOOKS / name) == []
 
 
 @pytest.mark.parametrize("name", EXPECTED)
@@ -68,12 +74,17 @@ def test_gpu_setup_rejects_missing_cuda_instead_of_using_cpu(name):
             assert "device" not in namespace
 
 
-def test_blank_handouts_report_exactly_four_missing_functions():
-    issues = [issue for name in EXPECTED for issue in check_notebook(NOTEBOOKS / name)]
-    assert len(issues) == 4
-    for functions in EXPECTED.values():
-        for function in functions.values():
-            assert any(f"{function} 함수가 아직 없습니다" in issue for issue in issues)
+def test_distributed_notebooks_pass_preflight():
+    assert all(check_notebook(NOTEBOOKS / name) == [] for name in EXPECTED)
+
+
+def test_preflight_accepts_legacy_student_task_tag(tmp_path):
+    path = minimal_notebook(tmp_path, "01_gpu_inference.ipynb")
+    notebook = nbformat.read(path, as_version=4)
+    for cell in notebook.cells:
+        cell.metadata.tags = ["student-task"]
+    nbformat.write(notebook, path)
+    assert check_notebook(path) == []
 
 
 @pytest.mark.parametrize("name", EXPECTED)
@@ -121,7 +132,7 @@ def test_preflight_rejects_missing_duplicate_or_mismatched_metadata(tmp_path, mu
 
 
 @pytest.mark.parametrize("name", EXPECTED)
-def test_check_cells_explain_missing_student_function_before_using_model(name):
+def test_check_cells_explain_missing_function_before_using_model(name):
     notebook = read_notebook(name)
     for cell in notebook.cells:
         if "exercise-check" not in cell.metadata.get("tags", []):
@@ -134,7 +145,7 @@ def test_check_cells_explain_missing_student_function_before_using_model(name):
             exec(cell.source, namespace)
 
 
-def test_missing_training_answer_blocks_later_execution_and_writes(tmp_path):
+def test_missing_training_function_blocks_later_execution_and_writes(tmp_path):
     notebook = read_notebook("02_gpu_finetuning.ipynb")
     start = next(i for i, cell in enumerate(notebook.cells)
                  if cell.metadata.get("exercise_id") == "02-step"
@@ -145,7 +156,7 @@ def test_missing_training_answer_blocks_later_execution_and_writes(tmp_path):
                  "FINETUNE_STAGE_COMPLETE": False, "MODEL_RELOADED": False,
                  "TABLES_SAVED": False, "REPORT_READY": False}
     for cell in notebook.cells[start:]:
-        if cell.cell_type != "code" or "student-task" in cell.metadata.get("tags", []):
+        if cell.cell_type != "code" or "provided-function" in cell.metadata.get("tags", []):
             continue
         with pytest.raises(RuntimeError):
             exec(cell.source, namespace)
@@ -162,7 +173,7 @@ def test_inference_outputs_require_both_successful_checks(tmp_path):
                    {"01-infer": False, "01-topk": True}):
         namespace = {"OUTPUT_DIR": tmp_path, "INFERENCE_CHECKS": checks}
         for source in outputs:
-            with pytest.raises(RuntimeError, match="두 문제의 확인 셀"):
+            with pytest.raises(RuntimeError, match="두 함수의 확인 셀"):
                 exec(source, namespace)
         assert "inference_report" not in namespace
     assert list(tmp_path.iterdir()) == []

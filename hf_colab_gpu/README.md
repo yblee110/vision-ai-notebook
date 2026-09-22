@@ -56,15 +56,15 @@ bash hf_colab_gpu/run_pipeline_colab.sh
 
 시연은 00번이 준비한 첫 cup 이미지와 별도 T4 세션을 사용합니다. `--image custom_images/my-cup.png`로 본인 이미지를 지정할 수도 있습니다. 이 자동 시연은 설치·실행·JSON 회수 후 종료까지 진행하며 실패한 경우에도 종료를 시도합니다. 뒤의 01·02번 수동 학습 세션은 별도로 만듭니다. 인증 방식, 로그, 오류 처리와 선택 스킬 예제는 [시연 안내](pipeline-guide.md)를 따릅니다.
 
-## GPU 생성 전 · AI 코딩 실습 준비
+## GPU 생성 전 · 제공된 코드 확인
 
-01번과 02번에는 **각각 두 개의 빈 코드 셀**이 있습니다. 문제 조건과 프롬프트 예시를 읽고 AI와 코드를 작성한 뒤, 입력 노트북을 저장합니다. [네 가지 문제와 진행 방법](ai-coding-workshop.md)을 먼저 확인하세요. 별도 강사용 파일 없이 같은 노트북에서 시도·확인·결과 해석을 이어갑니다.
+01번과 02번의 핵심 함수는 **각각 두 개씩 완성된 코드로 제공**합니다. [핵심 코드와 조건 변경 실습](ai-coding-workshop.md)에서 함수의 입력·출력과 처리 순서를 먼저 확인하세요. 코드를 채우는 과정 없이 제공된 파일을 실행할 수 있으며, 실행 후에는 조건을 바꾸며 결과를 비교합니다.
 
 ```bash
 python scripts/check_student_cells.py
 ```
 
-빈 셀·문법 오류·필수 함수 누락이 없는지 GPU 할당 전에 확인합니다. 이 사전 검사는 계산의 정답을 보장하지 않습니다. 실제 실행 뒤 노트북의 확인 셀과 출력 결과도 읽습니다. `colab exec -f`는 문제 앞에서 자동으로 멈추지 않으므로 네 셀을 채운 다음 GPU 실행으로 넘어갑니다.
+GPU 할당 전에 제공된 함수와 Python 문법을 확인합니다. 코드를 수정했다면 노트북을 저장한 뒤 같은 검사를 다시 실행합니다. 이 사전 검사는 계산 결과를 보장하지 않으므로 GPU 실행 뒤 노트북의 확인 셀과 출력 결과도 읽습니다.
 
 ## 2. Google 로그인과 GPU 세션 생성
 
@@ -139,13 +139,13 @@ colab upload -s hf-vision-gpu data/prepared/test.npz content/vision-ai/data/prep
 
 ## 5. GPU 추론 → 파인튜닝
 
-먼저 [01_gpu_inference.ipynb](notebooks/01_gpu_inference.ipynb)의 두 실습 함수 작성과 사전 검사를 마쳤는지 확인합니다. `AutoImageProcessor`, `AutoModelForImageClassification`, `torch.inference_mode`가 하는 일을 읽고 다음 CLI로 실행합니다.
+먼저 [01_gpu_inference.ipynb](notebooks/01_gpu_inference.ipynb)의 두 핵심 함수와 사전 검사 결과를 확인합니다. `AutoImageProcessor`, `AutoModelForImageClassification`, `torch.inference_mode`가 하는 일을 읽고 다음 CLI로 실행합니다.
 
 ```bash
 colab exec -s hf-vision-gpu -f hf_colab_gpu/notebooks/01_gpu_inference.ipynb --timeout 1800
 ```
 
-01번의 Hub 모델 `pipeline()` 예제와 직접 작성한 추론 함수의 결과를 비교합니다. `01_gpu_inference_output.ipynb`의 모든 코드 셀에 오류가 없는지 확인한 뒤 다음 노트북으로 넘어갑니다. 기존 1,000개 ImageNet 라벨로 나온 Top-5는 관찰용입니다.
+01번의 Hub 모델 `pipeline()` 예제와 제공된 추론 함수의 결과를 비교합니다. `01_gpu_inference_output.ipynb`의 모든 코드 셀에 오류가 없는지 확인한 뒤 다음 노트북으로 넘어갑니다. 기존 1,000개 ImageNet 라벨로 나온 Top-5는 관찰용입니다.
 
 [02_gpu_finetuning.ipynb](notebooks/02_gpu_finetuning.ipynb)는 같은 원본 모델에서 새 5개 클래스 분류기를 학습한 뒤, 마지막 Transformer 블록·최종 정규화·분류기를 함께 학습합니다.
 
@@ -186,7 +186,7 @@ Colab 종료 뒤 결과 폴더와 출력 노트북을 학생 PC로 내려받고 
 - [00·01·02 코드 해설 노트북](explanations/README.md): 각 원본 코드 셀의 변수·문법·결과를 설명하고 CPU에서 작은 예제를 실행합니다.
 - [Pipeline 추론·셸 시연·스킬 등록 예시](pipeline-guide.md)
 - [실제 T4 셸 시연 결과와 종료 기록](pipeline-demo-results.md)
-- [AI 코딩 네 가지 문제와 진행 방법](ai-coding-workshop.md)
+- [핵심 코드 네 가지와 조건 변경 실습](ai-coding-workshop.md)
 - [학생 교안](handson.md)
 - [실제 검증 결과](test-results.md)
 - [새 GitHub Codespaces 생성·실행 검증 기록](codespaces-verification.md)

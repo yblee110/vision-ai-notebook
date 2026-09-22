@@ -1,4 +1,4 @@
-"""Insert two student-owned functions into the real GPU training workflow."""
+"""Insert two complete functions into the real GPU training walkthrough."""
 from copy import deepcopy
 from textwrap import dedent
 
@@ -24,25 +24,25 @@ def code(text, *, guarded=True, tag=None, exercise=None):
     return nbf.v4.new_code_cell(source, metadata=metadata)
 
 
-def task(identifier, function):
-    return nbf.v4.new_code_cell('', metadata={
-        'tags': ['student-task'], 'exercise_id': identifier, 'expected_function': function,
-    })
+def provided_function(identifier, function, source):
+    cell = code(source, tag='provided-function', exercise=identifier)
+    cell.metadata['expected_function'] = function
+    return cell
 
 
 def step_exercise():
     return [md('''
-    ## 7. 실습 1 · 한 배치의 학습을 AI와 구현하기
+    ## 7. 실습 1 · 한 배치의 학습 과정 살펴보기
 
-    손실을 계산하는 데서 끝내지 않고 모델의 가중치를 실제로 한 번 바꾸는 함수를 만듭니다.
+    손실을 계산하고 모델의 가중치를 실제로 한 번 바꾸는 완성된 함수를 살펴봅니다.
     먼저 작은 연습 모델로 확인하고, 통과한 **같은 함수**를 아래 실제 DeiT 학습 반복문에서 사용합니다.
 
     **제공 입력:** `model`, `optimizer`, `criterion`, 장치에 올라간 `pixels`와 `labels`입니다.
     모델은 `model(pixel_values=pixels).logits`로 점수를 반환합니다.
 
-    **완성 조건**
+    **함수의 동작**
 
-    1. `train_one_batch(model, optimizer, criterion, pixels, labels)` 함수를 만듭니다.
+    1. `train_one_batch(model, optimizer, criterion, pixels, labels)`가 한 배치를 학습합니다.
     2. 학습 모드로 바꾸고 이전 기울기를 지운 다음, 예측 점수와 손실을 계산합니다.
     3. 역전파와 optimizer 업데이트를 각각 한 번 실행합니다.
     4. `(손실 float, 맞힌 수 int, 사진 수 int)` 튜플을 반환합니다.
@@ -53,13 +53,12 @@ def step_exercise():
     전체 수는 `2`입니다. 한 번 학습한 뒤에는 가중치가 달라집니다. 같은 입력으로 다시 학습하면
     이 작은 예제의 손실은 약 `0.6685`가 됩니다. 실제 사진 학습의 손실이나 정확도를 보장하는 값은 아닙니다.
 
-    **AI에게 요청하기**
+    **선택: AI에게 설명 요청하기**
 
-    > 저는 Python 초보자입니다. 위 입력과 완성 조건을 지키는 `train_one_batch` 함수를 작성해 주세요.
-    > PyTorch의 train, zero_grad, forward, CrossEntropyLoss, backward, step을 사용해 주세요.
-    > criterion은 이미 만들어져 있으며 반환값은 loss.item()의 float와 정답 개수, 배치 개수입니다.
-    > 업데이트 전 logits의 argmax로 맞힌 수를 구하고, 가중치를 직접 대입하거나 예시 정답을 고정하지 마세요.
-    > 기울기를 매번 지우는 이유와, backward와 step의 차이도 쉬운 말로 설명해 주세요.
+    > 저는 Python 초보자입니다. 아래 `train_one_batch` 함수가 한 배치를 학습하는 순서를 설명해 주세요.
+    > train, zero_grad, forward, CrossEntropyLoss, backward, step이 각각 무슨 일을 하는지 알려 주세요.
+    > 기울기를 매번 지우는 이유와 backward와 step의 차이도 쉬운 말로 설명해 주세요.
+    > 반환하는 손실과 맞힌 수가 업데이트 전 예측을 기준으로 하는 이유도 알려 주세요.
     '''), code('''
     from types import SimpleNamespace
     EXERCISE_CHECKS["02-step"] = False
@@ -86,12 +85,24 @@ def step_exercise():
     print("연습 입력:", practice_pixels.tolist(), "· 정답:", practice_labels.tolist())
     print("연습 optimizer: SGD, 학습률 0.1 / 실제 본학습: 기존 Adam 설정 유지")
     ''', tag='exercise-input', exercise='02-step'),
-    md('아래 빈 코드 셀에 함수만 작성하세요. 실행 결과는 다음 확인 셀에서 봅니다.'),
-    task('02-step', 'train_one_batch'),
+    md('아래 완성된 함수 셀을 실행하세요. 다음 확인 셀에서 두 번 학습한 결과를 봅니다.'),
+    provided_function('02-step', 'train_one_batch', '''
+    def train_one_batch(model, optimizer, criterion, pixels, labels):
+        model.train()
+        optimizer.zero_grad(set_to_none=True)
+        logits = model(pixel_values=pixels).logits
+        loss = criterion(logits, labels)
+        # 이번 업데이트 전 예측으로 맞힌 수와 사진 수를 기록합니다.
+        correct = int((logits.argmax(dim=-1) == labels).sum())
+        count = int(len(labels))
+        loss.backward()
+        optimizer.step()
+        return float(loss.item()), correct, count
+    '''),
     code('''
     EXERCISE_CHECKS["02-step"] = False
     if not callable(globals().get("train_one_batch")):
-        raise RuntimeError("실습 1의 빈 셀에 train_one_batch 함수를 만들고 실행하세요.")
+        raise RuntimeError("앞의 train_one_batch 함수 셀을 먼저 실행하세요.")
     practice = make_practice_model()
     practice_optimizer = torch.optim.SGD(practice.parameters(), lr=0.1)
     first = train_one_batch(practice, practice_optimizer, criterion, practice_pixels, practice_labels)
@@ -137,7 +148,7 @@ def step_exercise():
 
     </details>
 
-    ### 완성한 함수로 분류 헤드 학습하기
+    ### 같은 함수로 분류 헤드 학습하기
 
     검증 정확도가 가장 높은 epoch를 선택하고 동률이면 검증 손실이 낮은 모델을 고릅니다.
     테스트 결과로 epoch를 선택하지 않습니다. 이제부터 아래 결과는 실제 GPU 학습 결과입니다.
@@ -148,14 +159,14 @@ def scope_exercise():
     return [md('''
     ## 8. 실습 2 · 학습할 가중치 범위 선택하기
 
-    방금 학습한 분류 헤드를 유지한 채, 어느 부분까지 추가로 학습할지 정하는 함수를 만듭니다.
+    방금 학습한 분류 헤드를 유지한 채, 어느 부분까지 추가로 학습할지 정하는 완성된 함수를 살펴봅니다.
 
     **제공 입력:** 분류 헤드 학습을 마친 `model`과 문자열 `scope`입니다.
     이번 DeiT에는 `model.vit.encoder.layer`, `model.vit.layernorm`, `model.classifier`가 있습니다.
 
-    **완성 조건**
+    **함수의 동작**
 
-    1. `select_finetune_parameters(model, scope)` 함수를 만듭니다.
+    1. `select_finetune_parameters(model, scope)`가 학습할 가중치를 고릅니다.
     2. 호출할 때마다 모든 가중치의 `requires_grad`를 먼저 False로 되돌립니다.
     3. `scope="head"`면 classifier만, `scope="last_block"`이면 마지막 Transformer 블록·최종 layernorm·classifier만 True로 바꿉니다.
     4. 학습할 파라미터만 `{이름: 실제 parameter 객체}` 사전으로 반환합니다.
@@ -165,13 +176,12 @@ def scope_exercise():
     **예상 결과:** 현재 모델과 5개 클래스에서는 head만 `965`개, last_block 범위는 `446,213`개입니다.
     모델이나 클래스 수가 달라지면 개수도 달라집니다. 이 숫자를 반환값으로 고정하지 마세요.
 
-    **AI에게 요청하기**
+    **선택: AI에게 설명 요청하기**
 
-    > 위 구조와 조건에 맞는 `select_finetune_parameters(model, scope)` 함수를 작성해 주세요.
-    > head와 last_block 범위를 모두 지원하고 마지막 블록 번호는 layer[-1]로 찾아 주세요.
-    > 범위를 바꿔 다시 호출해도 전에 True였던 가중치가 남지 않도록 해 주세요.
-    > 이름과 실제 parameter 객체가 담긴 사전을 반환하고 파일 저장·학습·가중치 재초기화는 하지 마세요.
+    > 아래 `select_finetune_parameters` 함수에서 head와 last_block의 차이를 설명해 주세요.
+    > 범위를 바꿀 때 모든 가중치를 먼저 고정하는 이유와 layer[-1]이 가리키는 위치를 알려 주세요.
     > requires_grad와 파라미터 개수가 무엇을 의미하는지 초보자에게 설명해 주세요.
+    > 이 함수가 가중치 값을 바꾸는지, 학습할 대상만 고르는지도 구분해 주세요.
     '''), code('''
     EXERCISE_CHECKS["02-scope"] = False
     FINETUNE_SETUP_COMPLETE = False
@@ -181,14 +191,31 @@ def scope_exercise():
     print("Transformer 블록 수:", len(model.vit.encoder.layer))
     print("분류할 종류:", model.config.num_labels)
     ''', tag='exercise-input', exercise='02-scope'),
-    md('아래 빈 코드 셀을 채우세요. 다음 셀에서 범위를 바꾸며 개수와 고정 여부를 확인합니다.'),
-    task('02-scope', 'select_finetune_parameters'),
+    md('아래 완성된 함수 셀을 실행하세요. 다음 셀에서 범위를 바꾸며 개수와 고정 여부를 확인합니다.'),
+    provided_function('02-scope', 'select_finetune_parameters', '''
+    def select_finetune_parameters(model, scope):
+        if scope not in ("head", "last_block"):
+            raise ValueError(f"지원하지 않는 학습 범위: {scope}")
+        # 이전에 선택한 범위가 남지 않도록 먼저 모든 가중치를 고정합니다.
+        for parameter in model.parameters():
+            parameter.requires_grad_(False)
+        modules = [model.classifier]
+        if scope == "last_block":
+            modules.extend([model.vit.encoder.layer[-1], model.vit.layernorm])
+        for module in modules:
+            for parameter in module.parameters():
+                parameter.requires_grad_(True)
+        return {
+            name: parameter for name, parameter in model.named_parameters()
+            if parameter.requires_grad
+        }
+    '''),
     code('''
     EXERCISE_CHECKS["02-scope"] = False
     if not HEAD_STAGE_COMPLETE:
         raise RuntimeError("분류 헤드 학습을 먼저 완료하세요.")
     if not callable(globals().get("select_finetune_parameters")):
-        raise RuntimeError("실습 2의 빈 셀에 select_finetune_parameters 함수를 작성하세요.")
+        raise RuntimeError("앞의 select_finetune_parameters 함수 셀을 먼저 실행하세요.")
     unchanged_weights = parameter_sha256(model.named_parameters())
     last_prefix = f"vit.encoder.layer.{len(model.vit.encoder.layer) - 1}."
     parameter_lookup = dict(model.named_parameters())
@@ -234,7 +261,7 @@ def scope_exercise():
     ### 선택한 범위로 실제 파인튜닝하기
 
     앞의 11개 블록을 고정한 채 방금 학습한 분류 헤드에서 이어서 시작합니다.
-    손실 계산과 업데이트에는 실습 1에서 만든 함수를 그대로 사용합니다.
+    손실 계산과 업데이트에는 실습 1에서 살펴본 함수를 그대로 사용합니다.
     ''')]
 
 
@@ -244,10 +271,11 @@ def adapt_training(cells):
     assert 'optimizer = torch.optim.Adam(model.classifier.parameters()' in original[15].source
     assert 'last_block_index = ' in original[17].source
     assert 'for epoch in range(1, FINETUNE_EPOCHS' in original[18].source
-    original[0].source += '''\n\n**AI 코딩 실습:** 핵심 함수 두 개를 빈 코드 셀에 작성합니다. 문제 조건과 프롬프트를 읽고
-코드를 만들어 작은 입력과 범위 변경으로 시도한 뒤, 같은 노트북에서 결과와 접힌 해설을 확인하세요.
-별도 강사용 파일은 없습니다. 먼저 Codespaces에서 두 함수를 작성·저장하고 사전 검사를 통과한 뒤 Colab CLI로 실행합니다.
-Codespaces CPU의 Run All은 이 GPU 노트북을 실행하지 못합니다. 빈칸이나 확인 실패가 있으면 본학습과 결과 저장을 중단합니다.
+    original[0].source += '''\n\n**실습 방법:** 핵심 함수 두 개가 완성된 코드로 들어 있습니다. 입력과 함수 동작을 읽고
+작은 입력과 범위 변경으로 실행해 본 뒤, 같은 노트북에서 결과와 접힌 해설을 확인하세요.
+AI 프롬프트는 코드 설명을 듣거나 조건을 바꿔 볼 때 선택해서 사용합니다.
+Codespaces에서 사전 검사를 통과한 뒤 Colab CLI로 실행합니다.
+Codespaces CPU의 Run All은 이 GPU 노트북을 실행하지 못합니다. 함수 확인에 실패하면 본학습과 결과 저장을 중단합니다.
 완료 보고서가 있는 폴더는 덮어쓰지 않습니다. 본학습을 다시 실행할 때는 기존 결과를 별도로 보관하세요.'''
     result = [original[0], code('''
     TRAINING_ALLOWED = False
